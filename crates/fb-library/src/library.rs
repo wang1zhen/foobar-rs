@@ -1,5 +1,5 @@
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, HashMap},
     fs, io,
     path::{Path, PathBuf},
     time::Duration,
@@ -557,6 +557,24 @@ impl Library {
         let base = m3u_path.parent().unwrap_or(Path::new(".")).to_path_buf();
         let content = String::from_utf8(fs::read(&m3u_path)?)?;
 
+        // Index both stored and canonical forms so platform prefixes, symlinks
+        // and case differences between the scan and the M3U do not matter.
+        let mut paths: HashMap<PathBuf, String> = HashMap::new();
+        {
+            let mut stmt = self.conn.prepare("SELECT id, path FROM tracks")?;
+            let rows = stmt.query_map([], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            })?;
+            for row in rows {
+                let (id, path) = row?;
+                let path = PathBuf::from(path);
+                if let Ok(canonical) = fs::canonicalize(&path) {
+                    paths.insert(canonical, id.clone());
+                }
+                paths.insert(path, id);
+            }
+        }
+
         let mut track_ids = Vec::new();
         let mut skipped = 0;
         for line in content.lines() {
@@ -571,19 +589,12 @@ impl Library {
             } else {
                 base.join(raw)
             };
-            let Some(canonical) = fs::canonicalize(&joined).ok() else {
-                skipped += 1;
-                continue;
-            };
-
-            let track_id = self
-                .conn
-                .query_row(
-                    "SELECT id FROM tracks WHERE path = ?1",
-                    [path_text(&canonical)],
-                    |row| row.get::<_, String>(0),
-                )
-                .optional()?;
+            let canonical = fs::canonicalize(&joined).ok();
+            let track_id = canonical
+                .as_ref()
+                .and_then(|canonical| paths.get(canonical))
+                .or_else(|| paths.get(&joined))
+                .cloned();
             match track_id {
                 Some(track_id) => track_ids.push(TrackId::new(track_id)),
                 None => skipped += 1,
@@ -931,4 +942,63 @@ fn read_tag_fields(path: &Path) -> Result<TagFields> {
             })
         }),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn insert_track(library: &Library, id: &str, path: &Path) {
+        library
+            .conn
+            .execute(
+                "INSERT INTO tracks (id, path, folder, title, format, size)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![
+                    id,
+                    path_text(path),
+                    path_text(path.parent().unwrap_or(Path::new("."))),
+                    "Test",
+                    "WAV",
+                    1,
+                ],
+            )
+            .unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn m3u_import_matches_canonical_symlink_paths() {
+        use std::os::unix::fs::symlink;
+
+        let dir = tempfile::tempdir().unwrap();
+        let real = dir.path().join("real.wav");
+        let alias = dir.path().join("alias.wav");
+        fs::write(&real, b"audio").unwrap();
+        symlink(&real, &alias).unwrap();
+
+        let mut library = Library::open(dir.path().join("library.sqlite")).unwrap();
+        insert_track(&library, "local:alias", &alias);
+
+        let m3u = dir.path().join("list.m3u");
+        fs::write(&m3u, real.to_string_lossy().as_ref()).unwrap();
+        let report = library.import_m3u(&m3u, "Symlink").unwrap();
+        assert_eq!(report.imported, 1);
+        assert_eq!(report.skipped, 0);
+    }
+
+    #[test]
+    fn m3u_import_falls_back_to_the_joined_path() {
+        let dir = tempfile::tempdir().unwrap();
+        let missing = dir.path().join("missing.wav");
+
+        let mut library = Library::open(dir.path().join("library.sqlite")).unwrap();
+        insert_track(&library, "local:missing", &missing);
+
+        let m3u = dir.path().join("list.m3u");
+        fs::write(&m3u, missing.to_string_lossy().as_ref()).unwrap();
+        let report = library.import_m3u(&m3u, "Fallback").unwrap();
+        assert_eq!(report.imported, 1);
+        assert_eq!(report.skipped, 0);
+    }
 }

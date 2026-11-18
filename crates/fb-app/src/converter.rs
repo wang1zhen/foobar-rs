@@ -303,7 +303,7 @@ mod tests {
         fs::create_dir(&out).unwrap();
 
         let ok = convert_batch_with_ffmpeg(
-            Path::new("/bin/true"),
+            Path::new("true"),
             &[input.clone(), missing.clone()],
             &out,
             ConvertFormat::Flac,
@@ -313,7 +313,7 @@ mod tests {
         assert_eq!(ok.failed, 0);
 
         let failed = convert_batch_with_ffmpeg(
-            Path::new("/bin/false"),
+            Path::new("false"),
             &[input, missing],
             &out,
             ConvertFormat::Flac,
