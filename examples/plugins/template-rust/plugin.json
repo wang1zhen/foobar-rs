@@ -1,0 +1,29 @@
+{
+  "id": "com.example.template-rust",
+  "name": "Template Rust",
+  "version": "0.1.0",
+  "api_version": "0.1.0",
+  "permissions": ["register_commands", "declare_panels"],
+  "entry": "plugin.wasm",
+  "commands": [
+    {
+      "id": "com.example.template-rust.hello",
+      "title": "Template Hello"
+    },
+    {
+      "id": "com.example.template-rust.world",
+      "title": "Template World"
+    }
+  ],
+  "panels": [
+    {
+      "id": "com.example.template-rust.panel",
+      "title": "Template Panel",
+      "text": "Hello from the Rust plugin template.\nUse the buttons to run a command.",
+      "commands": [
+        "com.example.template-rust.hello",
+        "com.example.template-rust.world"
+      ]
+    }
+  ]
+}

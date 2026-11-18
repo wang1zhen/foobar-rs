@@ -1,0 +1,20 @@
+{
+  "id": "com.example.hello",
+  "name": "Hello",
+  "version": "0.1.0",
+  "api_version": "0.1.0",
+  "permissions": ["register_commands", "declare_panels"],
+  "entry": "plugin.wat",
+  "commands": [
+    { "id": "com.example.hello.hello", "title": "Hello" },
+    { "id": "com.example.hello.world", "title": "World" }
+  ],
+  "panels": [
+    {
+      "id": "com.example.hello.panel",
+      "title": "Hello Panel",
+      "text": "Hello from a WASM plugin panel.\nUse the buttons to run Hello or World.",
+      "commands": ["com.example.hello.hello", "com.example.hello.world"]
+    }
+  ]
+}

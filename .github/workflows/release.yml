@@ -1,0 +1,184 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+# 只上传 artifact；若要 `gh release upload`，改成 contents: write。
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  package:
+    name: package (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux
+          - os: macos-latest
+            name: macos
+          - os: windows-latest
+            name: windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config \
+            libasound2-dev \
+            libudev-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libgl1-mesa-dev \
+            libwayland-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Resolve version from tag
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.1.0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        run: cargo build --release -p fb-app
+
+      # ---- Linux ----
+      - name: Download appimagetool (optional)
+        if: runner.os == 'Linux'
+        continue-on-error: true
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/appimagetool" \
+            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x "$RUNNER_TEMP/appimagetool"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: Package tar.gz + deb + AppImage (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}" bash packaging/linux/package.sh
+          VERSION="${{ steps.version.outputs.version }}" bash packaging/linux/appimage.sh
+
+      # ---- Windows ----
+      - name: Install WiX (optional)
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix
+          Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.dotnet\tools"
+
+      - name: Package zip + MSI + sign (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PFX: ${{ secrets.WINDOWS_CERT_PFX }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          $env:VERSION = '${{ steps.version.outputs.version }}'
+          ./packaging/windows/package.ps1
+
+      # ---- macOS ----
+      - name: Import signing certificate (macOS, optional)
+        if: runner.os == 'macOS'
+        env:
+          APPLE_CERT_P12: ${{ secrets.APPLE_CERT_P12 }}
+          APPLE_CERT_PASSWORD: ${{ secrets.APPLE_CERT_PASSWORD }}
+        run: |
+          if [[ -z "${APPLE_CERT_P12:-}" ]]; then
+            echo "未设置 APPLE_CERT_P12，跳过导入"
+            exit 0
+          fi
+          echo "$APPLE_CERT_P12" | base64 -d > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p ci signing.keychain
+          security import "$RUNNER_TEMP/cert.p12" -k signing.keychain \
+            -P "$APPLE_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci signing.keychain
+          security list-keychains -d user -s signing.keychain
+          security default-keychain -s signing.keychain
+          security unlock-keychain -p ci signing.keychain
+
+      - name: Package zip + dmg, sign and notarize (macOS)
+        if: runner.os == 'macOS'
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: VERSION="${{ steps.version.outputs.version }}" bash packaging/macos/package.sh
+
+      # ---- Upload ----
+      - name: Upload artifacts (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: foobar-rs-${{ steps.version.outputs.version }}-linux
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
+            dist/*.AppImage
+            dist/SHA256SUMS
+          # AppImage 工具下载失败时仍上传 tar.gz/deb；脚本已校验必需产物存在。
+          if-no-files-found: warn
+
+      - name: Upload artifacts (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: foobar-rs-${{ steps.version.outputs.version }}-macos
+          path: |
+            dist/*.zip
+            dist/*.dmg
+          if-no-files-found: error
+
+      - name: Upload artifacts (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: foobar-rs-${{ steps.version.outputs.version }}-windows
+          path: |
+            dist/*.zip
+            dist/*.msi
+          # WiX 安装失败时仍上传 zip；脚本会打印跳过原因。
+          if-no-files-found: warn
+
+  release-artifacts:
+    name: release artifacts
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -lh dist
+
+      # 可选：创建 GitHub Release 并上传（需要上面 permissions: contents: write）
+      # - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

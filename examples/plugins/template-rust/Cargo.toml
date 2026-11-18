@@ -1,0 +1,11 @@
+[package]
+name = "template-rust"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+# Standalone workspace: this example is not a member of the foobar-rs workspace.
+[workspace]

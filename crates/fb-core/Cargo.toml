@@ -1,0 +1,15 @@
+[package]
+name = "fb-core"
+description = "Domain model and configuration schema for foobar-rs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,28 @@
+[package]
+name = "fb-ext-host"
+description = "wasmtime-based plugin host boundary for foobar-rs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+fb-ext-api = { path = "../fb-ext-api" }
+reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls"] }
+serde_json.workspace = true
+sha2 = "0.10"
+thiserror.workspace = true
+wasmtime = { version = "=50.0.2", default-features = false, features = [
+    "component-model",
+    "cranelift",
+    "runtime",
+    "std",
+    "wat",
+] }
+
+[dev-dependencies]
+tempfile = "3"
+wat = "1"
+
+[lints]
+workspace = true

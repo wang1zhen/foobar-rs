@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  WiX v4 MSI：per-machine 安装到 Program Files\foobar-rs，写开始菜单快捷方式。
+  构建：wix build -arch x64 -d Version=0.1.0 -d SourceDir=<发布目录> -o out.msi foobar-rs.wxs
+  UpgradeCode 必须永久固定，修改后旧版本无法升级；ProductCode 由 WiX 每次构建生成
+  （不写 ProductCode），配合 MajorUpgrade 实现升级/卸载旧版。
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="foobar-rs"
+           Manufacturer="foobar-rs"
+           Version="$(var.Version)"
+           UpgradeCode="5B8D0A6E-2E6B-4F8B-9E4F-1B7C3E9A2D10"
+           Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of foobar-rs is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="foobar-rs" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ProgramMenuDir" Name="foobar-rs" />
+    </StandardDirectory>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="AppExe" Guid="*">
+        <File Id="AppExe" Source="$(var.SourceDir)\fb-app.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="Docs" Guid="*">
+        <File Id="Readme" Source="$(var.SourceDir)\README.md" KeyPath="yes" />
+        <File Id="License" Source="$(var.SourceDir)\LICENSE" />
+      </Component>
+    </DirectoryRef>
+
+    <Component Id="StartMenuShortcut" Directory="ProgramMenuDir" Guid="*">
+      <Shortcut Id="AppShortcut" Name="foobar-rs"
+                Target="[INSTALLFOLDER]fb-app.exe" WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="RemoveProgramMenuDir" On="uninstall" />
+      <RegistryValue Root="HKLM" Key="Software\foobar-rs" Name="installed"
+                     Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Feature Id="Main">
+      <ComponentRef Id="AppExe" />
+      <ComponentRef Id="Docs" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+  </Package>
+</Wix>

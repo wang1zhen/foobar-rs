@@ -1,0 +1,18 @@
+[package]
+name = "fb-audio"
+description = "Audio output for foobar-rs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+reqwest = { version = "0.13", default-features = false, features = [
+    "rustls",
+    "blocking",
+] }
+rodio.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

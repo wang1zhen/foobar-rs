@@ -1,0 +1,48 @@
+[package]
+name = "fb-app"
+version.workspace = true
+edition = "2024"
+license.workspace = true
+publish = false
+
+[dependencies]
+fb-ui = { path = "../fb-ui" }
+fb-core = { path = "../fb-core" }
+fb-library = { path = "../fb-library" }
+fb-audio = { path = "../fb-audio" }
+fb-remote = { path = "../fb-remote" }
+fb-ext-api = { path = "../fb-ext-api" }
+fb-ext-host = { path = "../fb-ext-host" }
+wat = "1"
+blake3 = "1"
+rfd = "0.18"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+directories = "6"
+serde.workspace = true
+serde_json.workspace = true
+# 只用 glow 后端，避免为 M0 拉起整套 wgpu。
+eframe = { version = "0.37.0", default-features = false, features = [
+    "accesskit",
+    "clipboard",
+    "default_fonts",
+    "glow",
+    "wayland",
+    "x11",
+] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+souvlaki = { version = "0.9.3", default-features = false, features = ["use_zbus"] }
+ksni = { version = "0.3", default-features = false, features = ["blocking", "tokio"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+souvlaki = { version = "0.9.3", default-features = false }
+raw-window-handle = "0.6"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+souvlaki = { version = "0.9.3", default-features = false }
+
+[lints]
+workspace = true

@@ -1,0 +1,129 @@
+# cargo-deny 配置。发布前可选执行：`cargo deny check`（本机不要求安装）。
+# 许可清单与特殊义务说明见 THIRD_PARTY.md。
+
+[advisories]
+version = 2
+yanked = "warn"
+ignore = []
+
+[licenses]
+version = 2
+# 允许的 SPDX 许可（含传递依赖里实际出现的组合项）。
+allow = [
+    "0BSD",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSL-1.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "ISC",
+    "MIT",
+    "MIT-0",
+    "MPL-2.0",
+    "OFL-1.1",
+    "Ubuntu-font-1.0",
+    "Unicode-3.0",
+    "Unlicense",
+    "Zlib",
+]
+confidence-threshold = 0.93
+exceptions = []
+
+# 工作区 crate 不发布；其中 fb-app/fb-ui/fb-remote 尚未继承 license 字段，
+# 发布前应补 `license.workspace = true`（见 THIRD_PARTY.md 核对清单）。
+[licenses.private]
+ignore = true
+registries = []
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+highlight = "all"
+workspace-default-features = "allow"
+external-default-features = "allow"
+# 以下重复版本都来自传递依赖（GUI/平台/加密生态各自锁定不同大版本），
+# 无法在不 fork 的前提下合并；新增重复项会以 warning 暴露，发布前用
+# `cargo tree -d` 复核。版本与 Cargo.lock 同步。
+skip = [
+    { name = "base64", version = "=0.22.1" },
+    { name = "base64", version = "=0.23.1" },
+    { name = "bitflags", version = "=1.3.2" },
+    { name = "bitflags", version = "=2.13.2" },
+    { name = "block2", version = "=0.5.1" },
+    { name = "block2", version = "=0.6.2" },
+    { name = "calloop", version = "=0.13.0" },
+    { name = "calloop", version = "=0.14.4" },
+    { name = "calloop-wayland-source", version = "=0.3.0" },
+    { name = "calloop-wayland-source", version = "=0.4.1" },
+    { name = "core-foundation", version = "=0.9.4" },
+    { name = "core-foundation", version = "=0.10.1" },
+    { name = "core-graphics", version = "=0.23.2" },
+    { name = "core-graphics", version = "=0.25.0" },
+    { name = "core-graphics-types", version = "=0.1.3" },
+    { name = "core-graphics-types", version = "=0.2.0" },
+    { name = "cpufeatures", version = "=0.2.17" },
+    { name = "cpufeatures", version = "=0.3.1" },
+    { name = "embedded-io", version = "=0.4.0" },
+    { name = "embedded-io", version = "=0.6.1" },
+    { name = "foldhash", version = "=0.1.5" },
+    { name = "foldhash", version = "=0.2.0" },
+    { name = "getrandom", version = "=0.2.17" },
+    { name = "getrandom", version = "=0.3.4" },
+    { name = "getrandom", version = "=0.4.3" },
+    { name = "hashbrown", version = "=0.15.5" },
+    { name = "hashbrown", version = "=0.16.1" },
+    { name = "hashbrown", version = "=0.17.1" },
+    { name = "itertools", version = "=0.14.0" },
+    { name = "itertools", version = "=0.15.0" },
+    { name = "jni-sys", version = "=0.3.1" },
+    { name = "jni-sys", version = "=0.4.1" },
+    { name = "linux-raw-sys", version = "=0.4.15" },
+    { name = "linux-raw-sys", version = "=0.12.1" },
+    { name = "miniz_oxide", version = "=0.8.9" },
+    { name = "miniz_oxide", version = "=0.9.1" },
+    { name = "objc2", version = "=0.5.3" },
+    { name = "objc2", version = "=0.6.5" },
+    { name = "objc2-app-kit", version = "=0.2.2" },
+    { name = "objc2-app-kit", version = "=0.3.2" },
+    { name = "objc2-foundation", version = "=0.2.2" },
+    { name = "objc2-foundation", version = "=0.3.2" },
+    { name = "objc2-ui-kit", version = "=0.2.2" },
+    { name = "objc2-ui-kit", version = "=0.3.2" },
+    { name = "objc2-uniform-type-identifiers", version = "=0.2.2" },
+    { name = "objc2-uniform-type-identifiers", version = "=0.3.2" },
+    { name = "quick-xml", version = "=0.38.4" },
+    { name = "quick-xml", version = "=0.41.0" },
+    { name = "r-efi", version = "=5.3.0" },
+    { name = "r-efi", version = "=6.0.0" },
+    { name = "rand", version = "=0.9.5" },
+    { name = "rand", version = "=0.10.4" },
+    { name = "rand_core", version = "=0.9.5" },
+    { name = "rand_core", version = "=0.10.1" },
+    { name = "redox_syscall", version = "=0.4.1" },
+    { name = "redox_syscall", version = "=0.5.18" },
+    { name = "redox_syscall", version = "=0.9.5" },
+    { name = "rustc-hash", version = "=1.1.0" },
+    { name = "rustc-hash", version = "=2.1.3" },
+    { name = "rustix", version = "=0.38.44" },
+    { name = "rustix", version = "=1.1.6" },
+    { name = "smithay-client-toolkit", version = "=0.19.2" },
+    { name = "smithay-client-toolkit", version = "=0.20.0" },
+    { name = "syn", version = "=2.0.119" },
+    { name = "syn", version = "=3.0.10" },
+    { name = "thiserror", version = "=1.0.69" },
+    { name = "thiserror", version = "=2.0.21" },
+    { name = "thiserror-impl", version = "=1.0.69" },
+    { name = "thiserror-impl", version = "=2.0.21" },
+    { name = "wasm-encoder", version = "=0.261.0" },
+    { name = "wasm-encoder", version = "=0.263.0" },
+    { name = "wasmparser", version = "=0.261.0" },
+    { name = "wasmparser", version = "=0.263.0" },
+    { name = "windows-sys", version = "=0.52.0" },
+    { name = "windows-sys", version = "=0.61.2" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=foobar-rs
+Comment=foobar2000 风格音乐播放器
+Exec=fb-app
+Icon=rs.foobar_rs
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+StartupWMClass=rs.foobar_rs
