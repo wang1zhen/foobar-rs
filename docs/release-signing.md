@@ -59,7 +59,20 @@ CI secrets：
 
 MSI 用 WiX **v4**（`wix build`，`packaging/windows/foobar-rs.wxs`），per-machine 安装到
 `Program Files\foobar-rs`，写开始菜单快捷方式，卸载时清理。`UpgradeCode` 是固定 GUID，必须保持不变；
-`ProductCode` 不写死，由 WiX 每次生成，搭配 `MajorUpgrade` 支持升级。未安装 WiX 时脚本只产 zip 并提示。
+`ProductCode` 不写死，由 WiX 每次生成，搭配 `MajorUpgrade` 支持升级。
+
+**WiX 版本固定为 v4**（CI 用 `dotnet tool install --global wix --version 4.0.5`）：
+
+```powershell
+dotnet tool install --global wix --version 4.0.5
+wix --version   # 期望 4.x
+```
+
+WiX v6+ 首次构建要求交互接受 OSMF EULA，非交互环境会报 `WIX7015`，因此不要用 `--version` 缺省的
+最新版（当前会装到 v7）。`package.ps1` 会读 `wix --version` 的主版本：v4 才执行 `wix build`
+（失败即 `throw`，CI 会红），v6+ 打印跳过原因并仍产出 zip，未装 WiX 同样只产出 zip。workflow 里
+WiX 安装步骤是 `continue-on-error`，装不上不影响 zip 上传；但只要装上了 v4，MSI 构建失败就会让
+Windows job 失败，以便暴露 WXS 错误。
 
 本地校验：
 
@@ -123,3 +136,5 @@ spctl --assess --type open --context context:primary-signature -v dist/*.dmg
 - 三平台 Release workflow 尚未在远端真实运行；Windows/macOS 未实机。
 - 本机无 `dpkg-deb`、`appimagetool`、WiX、`signtool`、`codesign`，除 Linux deb 外均为静态检查。
 - Windows 证书 base64 解码、WiX v4 参数、macOS keychain 导入与公证命令需在真实 runner 上跑一次。
+- WiX 固定 v4 的安装/版本判定与 `$(var.Version)`/`$(var.SourceDir)` 传参只做了静态检查，未在 Windows
+  runner 上构建过 MSI。

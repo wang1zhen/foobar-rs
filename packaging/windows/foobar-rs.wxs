@@ -9,6 +9,7 @@
   <Package Name="foobar-rs"
            Manufacturer="foobar-rs"
            Version="$(var.Version)"
+           Language="1033"
            UpgradeCode="5B8D0A6E-2E6B-4F8B-9E4F-1B7C3E9A2D10"
            Scope="perMachine">
     <MajorUpgrade DowngradeErrorMessage="A newer version of foobar-rs is already installed." />
@@ -24,6 +25,7 @@
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="AppExe" Guid="*">
         <File Id="AppExe" Source="$(var.SourceDir)\fb-app.exe" KeyPath="yes" />
+        <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
       </Component>
       <Component Id="Docs" Guid="*">
         <File Id="Readme" Source="$(var.SourceDir)\README.md" KeyPath="yes" />

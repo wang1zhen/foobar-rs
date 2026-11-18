@@ -83,12 +83,17 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}" bash packaging/linux/appimage.sh
 
       # ---- Windows ----
-      - name: Install WiX (optional)
+      # 必须固定 v4：v6+ 首次运行要求交互接受 OSMF EULA，CI 里 wix build 会报 WIX7015。
+      - name: Install WiX v4 (optional)
         if: runner.os == 'Windows'
         continue-on-error: true
         shell: pwsh
         run: |
-          dotnet tool install --global wix
+          dotnet tool install --global wix --version 4.0.5
+          if ($LASTEXITCODE -ne 0) {
+            Write-Warning "WiX v4 安装失败，跳过 MSI（仍产出 zip）"
+            exit 0
+          }
           Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.dotnet\tools"
 
       - name: Package zip + MSI + sign (Windows)
@@ -162,7 +167,7 @@ jobs:
           path: |
             dist/*.zip
             dist/*.msi
-          # WiX 安装失败时仍上传 zip；脚本会打印跳过原因。
+          # WiX v4 未装上或版本不符时仍上传 zip；wix build 真失败会让本 job 失败以暴露 WXS 问题。
           if-no-files-found: warn
 
   release-artifacts:

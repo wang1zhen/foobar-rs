@@ -116,14 +116,18 @@ Windows（zip + 可选 MSI，可选签名）：
 
 ```powershell
 $env:VERSION='0.1.0'; packaging/windows/package.ps1
-# 安装 WiX v4 后额外产出 dist\foobar-rs-0.1.0-windows-x86_64.msi（per-machine）
+# 安装 WiX v4（dotnet tool install --global wix --version 4.0.5）后额外产出
+# dist\foobar-rs-0.1.0-windows-x86_64.msi（per-machine）
+# WiX v6+ 需交互接受 OSMF EULA，脚本会跳过 MSI 并提示；v4 构建失败会报错
 # 设置 WINDOWS_CERT_PFX/WINDOWS_CERT_PASSWORD 且有 signtool 时签名 exe/msi
 ```
 
 未签名/未公证的包：Windows SmartScreen 需“更多信息 → 仍要运行”；macOS 需右键“打开”或在“隐私与安全性”
 里放行。CI：推送 `v*` 标签（或手动 `workflow_dispatch`）触发 `.github/workflows/release.yml`，三平台各自
-构建并上传 tar.gz/deb/AppImage/SHA256SUMS、zip/MSI、zip/dmg；签名 secrets 缺失时自动跳过签名。Release job
-只汇总 artifact，创建 GitHub Release 的 `gh release create` 留在注释里（启用时需 `contents: write`）。
+构建并上传 tar.gz/deb/AppImage/SHA256SUMS、zip/MSI、zip/dmg；签名 secrets 缺失时自动跳过签名。Windows
+的 WiX 固定 `--version 4.0.5`（v6+ 的 OSMF EULA 会让 `wix build` 报 WIX7015）：装不上 WiX 只少 MSI，
+装上 v4 后 MSI 构建失败则 job 失败。Release job 只汇总 artifact，创建 GitHub Release 的
+`gh release create` 留在注释里（启用时需 `contents: write`）。
 
 未验证：deb 仅在本机 `ar`/`tar` 校验通过，未用 `dpkg -i` 实装；AppImage 未构造（无 appimagetool）、MSI 未
 构建（无 WiX）、macOS 签名/公证未实机；Release workflow 未在远端真实运行。Linux 包名固定 `x86_64`（deb 架构

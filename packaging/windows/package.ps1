@@ -51,15 +51,26 @@ $Zip = Join-Path $root "dist\$Name.zip"
 Compress-Archive -Path $Stage -DestinationPath $Zip -Force
 Write-Output $Zip
 
-# WiX v4：`wix build`（v3 的 candle/light 不兼容）。未安装则跳过。
+# WiX v4：`wix build`（v3 的 candle/light 不兼容，v6+ 的 OSMF EULA 在 CI 无法接受）。
+# 只有 v4 才构建 MSI；构建失败直接 throw，让 CI 暴露 WXS 错误。
 $Wix = Get-Command wix.exe -ErrorAction SilentlyContinue
-if ($Wix) {
-    $Msi = Join-Path $root "dist\$Name.msi"
-    & wix.exe build -arch x64 -d "Version=$Version" -d "SourceDir=$Stage" `
-        -o $Msi packaging\windows\foobar-rs.wxs
-    if ($LASTEXITCODE -ne 0) { throw "wix build failed" }
-    Invoke-Sign $Msi
-    Write-Output $Msi
+if (-not $Wix) {
+    Write-Warning "跳过 MSI：未找到 wix.exe（需 WiX v4；CI 用 dotnet tool install --global wix --version 4.0.5）"
 } else {
-    Write-Warning "跳过 MSI：未找到 wix.exe（需 WiX v4；CI 用 dotnet tool install --global wix）"
+    $WixVersion = ((& wix.exe --version 2>$null) -join ' ').Trim()
+    $WixMajor = 0
+    [void][int]::TryParse(($WixVersion -split '[.\-+]')[0], [ref]$WixMajor)
+
+    if ($WixMajor -ge 6) {
+        Write-Warning "跳过 MSI：WiX $WixVersion 为 v6+，需交互接受 OSMF EULA（否则 WIX7015）；请安装 WiX v4。"
+    } elseif ($WixMajor -ne 4) {
+        Write-Warning "跳过 MSI：需要 WiX v4，当前为 $WixVersion。"
+    } else {
+        $Msi = Join-Path $root "dist\$Name.msi"
+        & wix.exe build -arch x64 -d "Version=$Version" -d "SourceDir=$Stage" `
+            -o $Msi packaging\windows\foobar-rs.wxs
+        if ($LASTEXITCODE -ne 0) { throw "wix build failed（WiX $WixVersion）" }
+        Invoke-Sign $Msi
+        Write-Output $Msi
+    }
 }
