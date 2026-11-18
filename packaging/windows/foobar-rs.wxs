@@ -27,9 +27,11 @@
         <File Id="AppExe" Source="$(var.SourceDir)\fb-app.exe" KeyPath="yes" />
         <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
       </Component>
-      <Component Id="Docs" Guid="*">
+      <Component Id="Readme" Guid="*">
         <File Id="Readme" Source="$(var.SourceDir)\README.md" KeyPath="yes" />
-        <File Id="License" Source="$(var.SourceDir)\LICENSE" />
+      </Component>
+      <Component Id="License" Guid="*">
+        <File Id="License" Source="$(var.SourceDir)\LICENSE" KeyPath="yes" />
       </Component>
     </DirectoryRef>
 
@@ -43,7 +45,8 @@
 
     <Feature Id="Main">
       <ComponentRef Id="AppExe" />
-      <ComponentRef Id="Docs" />
+      <ComponentRef Id="Readme" />
+      <ComponentRef Id="License" />
       <ComponentRef Id="StartMenuShortcut" />
     </Feature>
   </Package>
