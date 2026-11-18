@@ -5,6 +5,7 @@
 
 use fb_core::{PlaybackSnapshot, PlaybackStatus};
 
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TrayCommand {
     TogglePlay,
@@ -37,6 +38,7 @@ pub fn tray_state_from_playback(snapshot: &PlaybackSnapshot) -> TrayState {
     }
 }
 
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub fn playback_menu_label(playing: bool) -> &'static str {
     if playing { "暂停" } else { "播放" }
 }
