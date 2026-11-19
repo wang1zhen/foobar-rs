@@ -103,7 +103,8 @@ tar xzf foobar-rs-0.1.0-linux-x86_64.tar.gz && prefix=$HOME/.local ./foobar-rs-0
 
 deb 用 `ar`/`tar` 手工组装，不依赖 `dpkg-deb`；`Depends` 是保守人工清单，需在目标发行版核对。tar.gz 里的
 `install.sh` 默认装到 `~/.local`（`prefix=/usr/local` 可改目标），桌面数据库/图标缓存命令不存在时跳过；
-卸载需手动删除对应文件（deb 用 `sudo apt remove foobar-rs`）。AppImage 无需安装，不支持系统集成。
+卸载需手动删除对应文件（deb 用 `sudo apt remove foobar-rs`）。AppImage 无需安装，不支持系统集成。各包均带
+256×256 PNG 图标与 AppStream 元数据（`usr/share/metainfo/rs.foobar_rs.appdata.xml`），供软件中心和桌面环境识别。
 
 macOS（zip + dmg，可选签名/公证）：
 

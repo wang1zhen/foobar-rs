@@ -12,10 +12,11 @@ cd "$root"
 cargo build --release -p fb-app
 
 rm -rf "$stage"
-mkdir -p "$stage/assets/icons"
+mkdir -p "$stage/assets/icons" "$stage/assets/linux"
 install -m755 target/release/fb-app "$stage/fb-app"
 install -m644 README.md LICENSE "$stage/"
-install -m644 assets/icons/rs.foobar_rs.svg "$stage/assets/icons/"
+install -m644 assets/icons/rs.foobar_rs.svg assets/icons/rs.foobar_rs.png "$stage/assets/icons/"
+install -m644 assets/linux/rs.foobar_rs.appdata.xml "$stage/assets/linux/"
 install -m644 assets/linux/rs.foobar_rs.desktop "$stage/rs.foobar_rs.desktop"
 install -m755 packaging/linux/install.sh "$stage/install.sh"
 
@@ -40,6 +41,8 @@ rm -f "$deb"
 mkdir -p "$debroot/usr/bin" \
          "$debroot/usr/share/applications" \
          "$debroot/usr/share/icons/hicolor/scalable/apps" \
+         "$debroot/usr/share/icons/hicolor/256x256/apps" \
+         "$debroot/usr/share/metainfo" \
          "$debroot/usr/share/doc/foobar-rs" \
          "$debctl" "$debwork"
 
@@ -49,6 +52,10 @@ sed 's|^Exec=.*|Exec=/usr/bin/fb-app|' assets/linux/rs.foobar_rs.desktop \
 chmod 644 "$debroot/usr/share/applications/rs.foobar_rs.desktop"
 install -m644 assets/icons/rs.foobar_rs.svg \
     "$debroot/usr/share/icons/hicolor/scalable/apps/rs.foobar_rs.svg"
+install -m644 assets/icons/rs.foobar_rs.png \
+    "$debroot/usr/share/icons/hicolor/256x256/apps/rs.foobar_rs.png"
+install -m644 assets/linux/rs.foobar_rs.appdata.xml \
+    "$debroot/usr/share/metainfo/rs.foobar_rs.appdata.xml"
 install -m644 README.md "$debroot/usr/share/doc/foobar-rs/README"
 install -m644 LICENSE "$debroot/usr/share/doc/foobar-rs/LICENSE"
 install -m644 THIRD_PARTY.md "$debroot/usr/share/doc/foobar-rs/THIRD_PARTY"
@@ -99,6 +106,8 @@ done
 for path in ./usr/bin/fb-app \
             ./usr/share/applications/rs.foobar_rs.desktop \
             ./usr/share/icons/hicolor/scalable/apps/rs.foobar_rs.svg \
+            ./usr/share/icons/hicolor/256x256/apps/rs.foobar_rs.png \
+            ./usr/share/metainfo/rs.foobar_rs.appdata.xml \
             ./usr/share/doc/foobar-rs/README \
             ./usr/share/doc/foobar-rs/LICENSE \
             ./usr/share/doc/foobar-rs/THIRD_PARTY \

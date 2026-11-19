@@ -7,10 +7,15 @@ prefix="${prefix:-$HOME/.local}"
 bin_dir="$prefix/bin"
 apps_dir="$prefix/share/applications"
 icon_dir="$prefix/share/icons/hicolor/scalable/apps"
+png_icon_dir="$prefix/share/icons/hicolor/256x256/apps"
+metainfo_dir="$prefix/share/metainfo"
 
-mkdir -p "$bin_dir" "$apps_dir" "$icon_dir"
+mkdir -p "$bin_dir" "$apps_dir" "$icon_dir" "$png_icon_dir" "$metainfo_dir"
 install -m755 "$here/fb-app" "$bin_dir/fb-app"
 install -m644 "$here/assets/icons/rs.foobar_rs.svg" "$icon_dir/rs.foobar_rs.svg"
+install -m644 "$here/assets/icons/rs.foobar_rs.png" "$png_icon_dir/rs.foobar_rs.png"
+install -m644 "$here/assets/linux/rs.foobar_rs.appdata.xml" \
+    "$metainfo_dir/rs.foobar_rs.appdata.xml"
 # 菜单不依赖 PATH：Exec 写死为安装后的绝对路径。
 sed "s|^Exec=.*|Exec=$bin_dir/fb-app|" \
     "$here/rs.foobar_rs.desktop" > "$apps_dir/rs.foobar_rs.desktop"

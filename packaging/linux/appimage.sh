@@ -24,15 +24,24 @@ appdir="$root/dist/foobar-rs.AppDir"
 rm -rf "$appdir"
 mkdir -p "$appdir/usr/bin" \
          "$appdir/usr/share/applications" \
-         "$appdir/usr/share/icons/hicolor/scalable/apps"
+         "$appdir/usr/share/icons/hicolor/scalable/apps" \
+         "$appdir/usr/share/icons/hicolor/256x256/apps" \
+         "$appdir/usr/share/metainfo"
 install -m755 target/release/fb-app "$appdir/usr/bin/fb-app"
 sed 's|^Exec=.*|Exec=fb-app|' assets/linux/rs.foobar_rs.desktop \
     > "$appdir/usr/share/applications/rs.foobar_rs.desktop"
 chmod 644 "$appdir/usr/share/applications/rs.foobar_rs.desktop"
 install -m644 assets/icons/rs.foobar_rs.svg \
     "$appdir/usr/share/icons/hicolor/scalable/apps/rs.foobar_rs.svg"
+install -m644 assets/icons/rs.foobar_rs.png \
+    "$appdir/usr/share/icons/hicolor/256x256/apps/rs.foobar_rs.png"
+install -m644 assets/linux/rs.foobar_rs.appdata.xml \
+    "$appdir/usr/share/metainfo/rs.foobar_rs.appdata.xml"
 # appimagetool 要求在 AppDir 根目录放 .desktop 和与之同名的图标。
 cp "$appdir/usr/share/applications/rs.foobar_rs.desktop" "$appdir/rs.foobar_rs.desktop"
+cp "$appdir/usr/share/icons/hicolor/256x256/apps/rs.foobar_rs.png" "$appdir/rs.foobar_rs.png"
+# .DirIcon 必须是有效图片，PNG 比 SVG 兼容性更好。
+cp "$appdir/rs.foobar_rs.png" "$appdir/.DirIcon"
 cp "$appdir/usr/share/icons/hicolor/scalable/apps/rs.foobar_rs.svg" "$appdir/rs.foobar_rs.svg"
 cat > "$appdir/AppRun" <<'EOF'
 #!/bin/sh
