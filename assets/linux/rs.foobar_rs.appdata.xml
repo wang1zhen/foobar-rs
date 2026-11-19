@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>rs.foobar_rs</id>
+  <id>io.github.wang1zhen.foobar-rs</id>
   <name>foobar-rs</name>
-  <summary>foobar2000 风格音乐播放器</summary>
+  <summary>Foobar-rs 跨平台音乐播放器</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <description>
-    <p>foobar-rs 是基于 Rust + egui 的跨平台音乐播放器，界面与操作习惯接近 foobar2000。</p>
+    <p>Foobar-rs 是基于 Rust + egui 的跨平台音乐播放器，界面与操作习惯接近 foobar2000。</p>
     <p>功能：</p>
     <ul>
       <li>本地媒体库扫描与播放列表管理</li>
@@ -24,7 +24,7 @@
     <category>Player</category>
   </categories>
   <url type="homepage">https://github.com/wang1zhen/foobar-rs</url>
-  <developer id="github.com.wang1zhen">
+  <developer id="io.github.wang1zhen">
     <name>wang1zhen</name>
   </developer>
   <content_rating type="oars-1.1"/>
