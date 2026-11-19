@@ -35,8 +35,8 @@ install -m644 assets/icons/rs.foobar_rs.svg \
     "$appdir/usr/share/icons/hicolor/scalable/apps/rs.foobar_rs.svg"
 install -m644 assets/icons/rs.foobar_rs.png \
     "$appdir/usr/share/icons/hicolor/256x256/apps/rs.foobar_rs.png"
-install -m644 assets/linux/rs.foobar_rs.appdata.xml \
-    "$appdir/usr/share/metainfo/rs.foobar_rs.appdata.xml"
+install -m644 assets/linux/io.github.wang1zhen.foobar-rs.appdata.xml \
+    "$appdir/usr/share/metainfo/io.github.wang1zhen.foobar-rs.appdata.xml"
 # appimagetool 要求在 AppDir 根目录放 .desktop 和与之同名的图标。
 cp "$appdir/usr/share/applications/rs.foobar_rs.desktop" "$appdir/rs.foobar_rs.desktop"
 cp "$appdir/usr/share/icons/hicolor/256x256/apps/rs.foobar_rs.png" "$appdir/rs.foobar_rs.png"
