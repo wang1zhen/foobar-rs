@@ -13,7 +13,7 @@ cargo build --release -p fb-app
 rm -rf "$app"
 mkdir -p "$contents/MacOS" "$contents/Resources"
 install -m755 target/release/fb-app "$contents/MacOS/fb-app"
-install -m644 assets/icons/rs.foobar_rs.svg "$contents/Resources/rs.foobar_rs.svg"
+install -m644 assets/icons/io.github.wang1zhen.foobar-rs.svg "$contents/Resources/io.github.wang1zhen.foobar-rs.svg"
 
 cat > "$contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -25,7 +25,7 @@ cat > "$contents/Info.plist" <<EOF
     <key>CFBundleDisplayName</key>
     <string>foobar-rs</string>
     <key>CFBundleIdentifier</key>
-    <string>rs.foobar_rs</string>
+    <string>io.github.wang1zhen.foobar-rs</string>
     <key>CFBundleExecutable</key>
     <string>fb-app</string>
     <key>CFBundlePackageType</key>

@@ -3000,7 +3000,7 @@ fn create_media_controls(
     }
     let mut controls = MediaControls::new(PlatformConfig {
         display_name: "foobar-rs",
-        dbus_name: "rs.foobar_rs",
+        dbus_name: "io.github.wang1zhen.foobar-rs",
         hwnd,
     })
     .map_err(|err| err.to_string())?;
@@ -3752,7 +3752,7 @@ fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_title("foobar-rs")
-            .with_app_id("rs.foobar_rs")
+            .with_app_id("io.github.wang1zhen.foobar-rs")
             .with_icon(app_icon())
             .with_inner_size([1280.0, 800.0])
             .with_min_inner_size(fb_ui::tokens::size::MIN_WINDOW),

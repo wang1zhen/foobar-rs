@@ -15,9 +15,9 @@ rm -rf "$stage"
 mkdir -p "$stage/assets/icons" "$stage/assets/linux"
 install -m755 target/release/fb-app "$stage/fb-app"
 install -m644 README.md LICENSE "$stage/"
-install -m644 assets/icons/rs.foobar_rs.svg assets/icons/rs.foobar_rs.png "$stage/assets/icons/"
+install -m644 assets/icons/io.github.wang1zhen.foobar-rs.svg assets/icons/io.github.wang1zhen.foobar-rs.png "$stage/assets/icons/"
 install -m644 assets/linux/io.github.wang1zhen.foobar-rs.appdata.xml "$stage/assets/linux/"
-install -m644 assets/linux/rs.foobar_rs.desktop "$stage/rs.foobar_rs.desktop"
+install -m644 assets/linux/io.github.wang1zhen.foobar-rs.desktop "$stage/io.github.wang1zhen.foobar-rs.desktop"
 install -m755 packaging/linux/install.sh "$stage/install.sh"
 
 tarball="$root/dist/$name.tar.gz"
@@ -47,13 +47,13 @@ mkdir -p "$debroot/usr/bin" \
          "$debctl" "$debwork"
 
 install -m755 target/release/fb-app "$debroot/usr/bin/fb-app"
-sed 's|^Exec=.*|Exec=/usr/bin/fb-app|' assets/linux/rs.foobar_rs.desktop \
-    > "$debroot/usr/share/applications/rs.foobar_rs.desktop"
-chmod 644 "$debroot/usr/share/applications/rs.foobar_rs.desktop"
-install -m644 assets/icons/rs.foobar_rs.svg \
-    "$debroot/usr/share/icons/hicolor/scalable/apps/rs.foobar_rs.svg"
-install -m644 assets/icons/rs.foobar_rs.png \
-    "$debroot/usr/share/icons/hicolor/256x256/apps/rs.foobar_rs.png"
+sed 's|^Exec=.*|Exec=/usr/bin/fb-app|' assets/linux/io.github.wang1zhen.foobar-rs.desktop \
+    > "$debroot/usr/share/applications/io.github.wang1zhen.foobar-rs.desktop"
+chmod 644 "$debroot/usr/share/applications/io.github.wang1zhen.foobar-rs.desktop"
+install -m644 assets/icons/io.github.wang1zhen.foobar-rs.svg \
+    "$debroot/usr/share/icons/hicolor/scalable/apps/io.github.wang1zhen.foobar-rs.svg"
+install -m644 assets/icons/io.github.wang1zhen.foobar-rs.png \
+    "$debroot/usr/share/icons/hicolor/256x256/apps/io.github.wang1zhen.foobar-rs.png"
 install -m644 assets/linux/io.github.wang1zhen.foobar-rs.appdata.xml \
     "$debroot/usr/share/metainfo/io.github.wang1zhen.foobar-rs.appdata.xml"
 install -m644 README.md "$debroot/usr/share/doc/foobar-rs/README"
@@ -104,9 +104,9 @@ for path in ./control ./md5sums; do
         || { echo "control.tar.gz 缺少 $path" >&2; exit 1; }
 done
 for path in ./usr/bin/fb-app \
-            ./usr/share/applications/rs.foobar_rs.desktop \
-            ./usr/share/icons/hicolor/scalable/apps/rs.foobar_rs.svg \
-            ./usr/share/icons/hicolor/256x256/apps/rs.foobar_rs.png \
+            ./usr/share/applications/io.github.wang1zhen.foobar-rs.desktop \
+            ./usr/share/icons/hicolor/scalable/apps/io.github.wang1zhen.foobar-rs.svg \
+            ./usr/share/icons/hicolor/256x256/apps/io.github.wang1zhen.foobar-rs.png \
             ./usr/share/metainfo/io.github.wang1zhen.foobar-rs.appdata.xml \
             ./usr/share/doc/foobar-rs/README \
             ./usr/share/doc/foobar-rs/LICENSE \

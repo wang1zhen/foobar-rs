@@ -63,7 +63,7 @@ mod platform {
 
     impl Tray for FoobarTray {
         fn id(&self) -> String {
-            "rs.foobar_rs".into()
+            "io.github.wang1zhen.foobar-rs".into()
         }
 
         fn title(&self) -> String {

@@ -28,21 +28,21 @@ mkdir -p "$appdir/usr/bin" \
          "$appdir/usr/share/icons/hicolor/256x256/apps" \
          "$appdir/usr/share/metainfo"
 install -m755 target/release/fb-app "$appdir/usr/bin/fb-app"
-sed 's|^Exec=.*|Exec=fb-app|' assets/linux/rs.foobar_rs.desktop \
-    > "$appdir/usr/share/applications/rs.foobar_rs.desktop"
-chmod 644 "$appdir/usr/share/applications/rs.foobar_rs.desktop"
-install -m644 assets/icons/rs.foobar_rs.svg \
-    "$appdir/usr/share/icons/hicolor/scalable/apps/rs.foobar_rs.svg"
-install -m644 assets/icons/rs.foobar_rs.png \
-    "$appdir/usr/share/icons/hicolor/256x256/apps/rs.foobar_rs.png"
+sed 's|^Exec=.*|Exec=fb-app|' assets/linux/io.github.wang1zhen.foobar-rs.desktop \
+    > "$appdir/usr/share/applications/io.github.wang1zhen.foobar-rs.desktop"
+chmod 644 "$appdir/usr/share/applications/io.github.wang1zhen.foobar-rs.desktop"
+install -m644 assets/icons/io.github.wang1zhen.foobar-rs.svg \
+    "$appdir/usr/share/icons/hicolor/scalable/apps/io.github.wang1zhen.foobar-rs.svg"
+install -m644 assets/icons/io.github.wang1zhen.foobar-rs.png \
+    "$appdir/usr/share/icons/hicolor/256x256/apps/io.github.wang1zhen.foobar-rs.png"
 install -m644 assets/linux/io.github.wang1zhen.foobar-rs.appdata.xml \
     "$appdir/usr/share/metainfo/io.github.wang1zhen.foobar-rs.appdata.xml"
 # appimagetool 要求在 AppDir 根目录放 .desktop 和与之同名的图标。
-cp "$appdir/usr/share/applications/rs.foobar_rs.desktop" "$appdir/rs.foobar_rs.desktop"
-cp "$appdir/usr/share/icons/hicolor/256x256/apps/rs.foobar_rs.png" "$appdir/rs.foobar_rs.png"
+cp "$appdir/usr/share/applications/io.github.wang1zhen.foobar-rs.desktop" "$appdir/io.github.wang1zhen.foobar-rs.desktop"
+cp "$appdir/usr/share/icons/hicolor/256x256/apps/io.github.wang1zhen.foobar-rs.png" "$appdir/io.github.wang1zhen.foobar-rs.png"
 # .DirIcon 必须是有效图片，PNG 比 SVG 兼容性更好。
-cp "$appdir/rs.foobar_rs.png" "$appdir/.DirIcon"
-cp "$appdir/usr/share/icons/hicolor/scalable/apps/rs.foobar_rs.svg" "$appdir/rs.foobar_rs.svg"
+cp "$appdir/io.github.wang1zhen.foobar-rs.png" "$appdir/.DirIcon"
+cp "$appdir/usr/share/icons/hicolor/scalable/apps/io.github.wang1zhen.foobar-rs.svg" "$appdir/io.github.wang1zhen.foobar-rs.svg"
 cat > "$appdir/AppRun" <<'EOF'
 #!/bin/sh
 here="$(dirname "$(readlink -f "$0")")"

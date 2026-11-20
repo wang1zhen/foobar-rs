@@ -56,7 +56,7 @@ cargo build -p fb-app
 ./scripts/install-desktop.sh
 ```
 
-脚本把 `assets/icons/rs.foobar_rs.svg` 和 `assets/linux/rs.foobar_rs.desktop` 安装到 `${XDG_DATA_HOME:-$HOME/.local/share}`，之后从应用菜单启动。它先找 `target/release/fb-app`，再找 `target/debug/fb-app`，并把 `.desktop` 的 `Exec` 改写为该二进制的绝对路径（不依赖 `PATH`）；两者都不存在时会提示先运行 `cargo build -p fb-app` 并退出。因此移动或删除 `target` 后菜单会失效，需要重新构建并再次运行脚本。Wayland 任务栏图标要求 `.desktop` 的 `StartupWMClass` 与应用 `app_id` 一致（都是 `rs.foobar_rs`）；如果图标仍不显示，通常是桌面环境缓存未刷新（注销重登）或合成器没有按 `app_id` 匹配窗口，而不是二进制缺图标。
+脚本把 `assets/icons/io.github.wang1zhen.foobar-rs.svg` 和 `assets/linux/io.github.wang1zhen.foobar-rs.desktop` 安装到 `${XDG_DATA_HOME:-$HOME/.local/share}`，之后从应用菜单启动。它先找 `target/release/fb-app`，再找 `target/debug/fb-app`，并把 `.desktop` 的 `Exec` 改写为该二进制的绝对路径（不依赖 `PATH`）；两者都不存在时会提示先运行 `cargo build -p fb-app` 并退出。因此移动或删除 `target` 后菜单会失效，需要重新构建并再次运行脚本。Wayland 任务栏图标要求 `.desktop` 的 `StartupWMClass` 与应用 `app_id` 一致（都是 `io.github.wang1zhen.foobar-rs`）；如果图标仍不显示，通常是桌面环境缓存未刷新（注销重登）或合成器没有按 `app_id` 匹配窗口，而不是二进制缺图标。
 
 ### 系统托盘 / 媒体键 / 热键
 
@@ -164,13 +164,13 @@ $env:VERSION='0.1.0'; packaging/windows/package.ps1
 
 自动化测试覆盖 362 项，但不能替代真实桌面/声卡/服务器验收。建议按下面顺序走一遍：
 
-0. **桌面图标**：`cargo build -p fb-app` 后运行 `./scripts/install-desktop.sh`，从应用菜单启动；Wayland 任务栏图标依赖 `.desktop` 与 app_id `rs.foobar_rs` 匹配。
+0. **桌面图标**：`cargo build -p fb-app` 后运行 `./scripts/install-desktop.sh`，从应用菜单启动；Wayland 任务栏图标依赖 `.desktop` 与 app_id `io.github.wang1zhen.foobar-rs` 匹配。
 1. **本地库**：运行 `cargo run -p fb-app`，在设置里用“添加目录”配置多个音乐目录；分别设置递归/排除规则，点“扫描全部”；确认专辑/曲目、搜索、播放/暂停、切歌、seek、音量、播放列表、重启持久化。
 2. **封面/评分/M3U/自动列表**：确认专辑网格显示真实封面；点星级评分并重启保留；导出/导入 M3U；新建自动列表并验证 rating/artist/format 查询与动态计数。
 3. **Navidrome**：在“远程源”填 URL + API Key 或用户名/密码；确认专辑分页、搜索、专辑曲目、点曲目后缓存并播放、seek、切歌、scrobble 服务端记录。
 4. **布局/定制**：设置里切换经典/紧凑/专注/极简；进入布局编辑拖动导航/检查器/播放栏边缘；切换明暗；改列可见性/顺序/自定义格式/快捷键；重启确认偏好保留。
 5. **ReplayGain/EQ**：播放带 ReplayGain 标签的曲目，切换设置开关听音量变化；调整 5 段 EQ 后松开滑杆，确认效果与短暂重建间隙。
-6. **媒体键 / 托盘**：播放时按系统 Play/Pause/Next/Previous；可用 `busctl --user list | grep rs.foobar_rs` 检查 Linux MPRIS 服务。KDE 托盘应出现图标，菜单可播放/暂停、切歌、停止、显示窗口、退出；可查询 `org.kde.StatusNotifierWatcher` 的 `RegisteredStatusNotifierItems` 确认托盘已注册。GNOME 需 AppIndicator 扩展。
+6. **媒体键 / 托盘**：播放时按系统 Play/Pause/Next/Previous；可用 `busctl --user list | grep io.github.wang1zhen.foobar-rs` 检查 Linux MPRIS 服务。KDE 托盘应出现图标，菜单可播放/暂停、切歌、停止、显示窗口、退出；可查询 `org.kde.StatusNotifierWatcher` 的 `RegisteredStatusNotifierItems` 确认托盘已注册。GNOME 需 AppIndicator 扩展。
 7. **插件**：
    ```sh
    FOOBAR_RS_DATA_DIR=/tmp/foobar-rs-data ./scripts/install-hello-plugin.sh

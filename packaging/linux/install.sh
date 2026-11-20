@@ -12,14 +12,14 @@ metainfo_dir="$prefix/share/metainfo"
 
 mkdir -p "$bin_dir" "$apps_dir" "$icon_dir" "$png_icon_dir" "$metainfo_dir"
 install -m755 "$here/fb-app" "$bin_dir/fb-app"
-install -m644 "$here/assets/icons/rs.foobar_rs.svg" "$icon_dir/rs.foobar_rs.svg"
-install -m644 "$here/assets/icons/rs.foobar_rs.png" "$png_icon_dir/rs.foobar_rs.png"
+install -m644 "$here/assets/icons/io.github.wang1zhen.foobar-rs.svg" "$icon_dir/io.github.wang1zhen.foobar-rs.svg"
+install -m644 "$here/assets/icons/io.github.wang1zhen.foobar-rs.png" "$png_icon_dir/io.github.wang1zhen.foobar-rs.png"
 install -m644 "$here/assets/linux/io.github.wang1zhen.foobar-rs.appdata.xml" \
     "$metainfo_dir/io.github.wang1zhen.foobar-rs.appdata.xml"
 # 菜单不依赖 PATH：Exec 写死为安装后的绝对路径。
 sed "s|^Exec=.*|Exec=$bin_dir/fb-app|" \
-    "$here/rs.foobar_rs.desktop" > "$apps_dir/rs.foobar_rs.desktop"
-chmod 644 "$apps_dir/rs.foobar_rs.desktop"
+    "$here/io.github.wang1zhen.foobar-rs.desktop" > "$apps_dir/io.github.wang1zhen.foobar-rs.desktop"
+chmod 644 "$apps_dir/io.github.wang1zhen.foobar-rs.desktop"
 
 if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
@@ -29,4 +29,4 @@ if command -v gtk-update-icon-cache >/dev/null 2>&1; then
 fi
 
 echo "已安装: $bin_dir/fb-app"
-echo "桌面项: $apps_dir/rs.foobar_rs.desktop"
+echo "桌面项: $apps_dir/io.github.wang1zhen.foobar-rs.desktop"

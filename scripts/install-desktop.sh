@@ -20,15 +20,15 @@ if [[ -z "$bin" ]]; then
 fi
 
 mkdir -p "$icon_dir" "$apps_dir"
-cp "$root/assets/icons/rs.foobar_rs.svg" "$icon_dir/rs.foobar_rs.svg"
+cp "$root/assets/icons/io.github.wang1zhen.foobar-rs.svg" "$icon_dir/io.github.wang1zhen.foobar-rs.svg"
 
 # 菜单不依赖 PATH：把 Exec 换成本次构建的绝对路径。
 tmp="$(mktemp)"
 trap 'rm -f "$tmp"' EXIT
 while IFS= read -r line; do
     printf '%s\n' "${line/#Exec=*/Exec=$bin}"
-done < "$root/assets/linux/rs.foobar_rs.desktop" > "$tmp"
-install -m644 "$tmp" "$apps_dir/rs.foobar_rs.desktop"
+done < "$root/assets/linux/io.github.wang1zhen.foobar-rs.desktop" > "$tmp"
+install -m644 "$tmp" "$apps_dir/io.github.wang1zhen.foobar-rs.desktop"
 
 if command -v gtk-update-icon-cache >/dev/null 2>&1 && [[ -w "$data/icons/hicolor" ]]; then
     gtk-update-icon-cache -f -t "$data/icons/hicolor" >/dev/null 2>&1 || true
@@ -37,7 +37,7 @@ if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database "$apps_dir"
 fi
 
-echo "图标:   $icon_dir/rs.foobar_rs.svg"
-echo "桌面项: $apps_dir/rs.foobar_rs.desktop"
+echo "图标:   $icon_dir/io.github.wang1zhen.foobar-rs.svg"
+echo "桌面项: $apps_dir/io.github.wang1zhen.foobar-rs.desktop"
 echo "可执行: $bin"
 echo "从应用菜单启动 foobar-rs；若菜单未刷新，注销并重新登录。"

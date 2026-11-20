@@ -14,7 +14,7 @@
       <li>WASM 插件</li>
     </ul>
   </description>
-  <launchable type="desktop-id">rs.foobar_rs.desktop</launchable>
+  <launchable type="desktop-id">io.github.wang1zhen.foobar-rs.desktop</launchable>
   <provides>
     <binary>fb-app</binary>
   </provides>
