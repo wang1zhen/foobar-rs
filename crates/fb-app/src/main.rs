@@ -83,6 +83,12 @@ struct App {
     library: Library,
     snapshot: LibrarySnapshot,
     cover_cache: HashMap<String, Arc<egui::ColorImage>>,
+    /// 送给界面的模型；静态部分只在 snapshot/covers 变化时重建。
+    model: UiModel,
+    /// `model` 静态部分对应的 snapshot 版本。
+    model_generation: u64,
+    /// snapshot/covers 每变化一次递增。
+    snapshot_generation: u64,
     playback: PlaybackState,
     audio: Option<AudioHandle>,
     audio_token: u64,
@@ -198,6 +204,9 @@ impl App {
             library,
             snapshot,
             cover_cache: HashMap::new(),
+            model: UiModel::default(),
+            model_generation: 0,
+            snapshot_generation: 1,
             playback,
             audio,
             audio_token: 0,
@@ -244,7 +253,7 @@ impl App {
             eq_dirty: false,
         };
         app.refresh_covers();
-        app.state.set_model(app.ui_model());
+        app.sync_model();
         app.send_audio(AudioCommand::SetVolume(app.playback.volume()));
         app.send_eq();
 
@@ -286,33 +295,34 @@ impl App {
         }
     }
 
-    fn ui_model(&self) -> UiModel {
+    /// 每帧把宿主状态推给界面。静态部分（曲目/专辑/播放列表/封面）只在
+    /// snapshot/covers 变化时重建，其余字段每帧刷新。
+    fn sync_model(&mut self) {
+        if self.model_generation != self.snapshot_generation {
+            rebuild_static_model(&mut self.model, &self.snapshot, &self.cover_cache);
+            self.model_generation = self.snapshot_generation;
+        }
         let position = self
             .audio
             .as_ref()
             .map_or_else(|| self.playback.position(), AudioHandle::position);
-        UiModel {
-            albums: self.snapshot.albums.iter().map(album_item).collect(),
-            tracks: self.snapshot.tracks.iter().map(track_item).collect(),
-            playlists: self.snapshot.playlists.iter().map(playlist_item).collect(),
-            auto_playlists: self
-                .snapshot
-                .autoplaylists
-                .iter()
-                .map(auto_playlist_item)
-                .collect(),
-            radio_stations: radio_stations_model(&self.settings.radio_stations),
-            sources: self.sources(),
-            playback: playback_view(&self.playback.snapshot(), &self.snapshot.tracks, position),
-            remote: self.remote_view.clone(),
-            plugins: self.plugin_items(),
-            plugin_source_results: self.plugin_source_results.clone(),
-            covers: self.cover_cache.clone(),
-            library_folders: self.settings.folders.clone(),
-            library_path: primary_library_path(&self.settings.folders),
-            scanning: self.scan_rx.is_some(),
-            status: self.status.clone(),
-        }
+        self.model.playback =
+            playback_view(&self.playback.snapshot(), &self.snapshot.tracks, position);
+        self.model.remote = self.remote_view.clone();
+        self.model.plugin_source_results = self.plugin_source_results.clone();
+        let sources = self.sources();
+        self.model.sources = sources;
+        self.model.radio_stations = radio_stations_model(&self.settings.radio_stations);
+        let plugins = self.plugin_items();
+        self.model.plugins = plugins;
+        self.model.library_folders = self.settings.folders.clone();
+        self.model.library_path = primary_library_path(&self.settings.folders);
+        self.model.scanning = self.scan_rx.is_some();
+        self.model.status = self.status.clone();
+        // 换回的旧模型带着上一帧的静态数据，下帧靠 generation 判断是否重建。
+        let sent = std::mem::replace(&mut self.model_generation, self.snapshot_generation);
+        self.model = self.state.set_model(std::mem::take(&mut self.model));
+        self.model_generation = sent;
     }
 
     fn sources(&self) -> Vec<SourceItem> {
@@ -814,6 +824,7 @@ impl App {
     }
 
     fn refresh_covers(&mut self) {
+        self.snapshot_generation = self.snapshot_generation.wrapping_add(1);
         if let Err(err) =
             load_cover_cache(&self.library, &self.snapshot.albums, &mut self.cover_cache)
         {
@@ -2393,7 +2404,7 @@ impl eframe::App for App {
         for action in actions {
             self.handle_action(action);
         }
-        self.state.set_model(self.ui_model());
+        self.sync_model();
         self.sync_tray();
         if plugin_should_request_now(plugin_changed) {
             // 本帧绘制用的还是 set_model 前的旧模型，事件到达时立即补一帧显示结果。
@@ -2417,6 +2428,32 @@ impl eframe::App for App {
 }
 
 // ---- 纯函数：媒体库/播放状态 → 界面模型 ----
+
+/// 用 snapshot/covers 重建模型的静态部分，保留已有 Vec 容量避免每帧重新分配。
+fn rebuild_static_model(
+    model: &mut UiModel,
+    snapshot: &LibrarySnapshot,
+    covers: &HashMap<String, Arc<egui::ColorImage>>,
+) {
+    model.albums.clear();
+    model.albums.extend(snapshot.albums.iter().map(album_item));
+    model.tracks.clear();
+    model.tracks.extend(snapshot.tracks.iter().map(track_item));
+    model.playlists.clear();
+    model
+        .playlists
+        .extend(snapshot.playlists.iter().map(playlist_item));
+    model.auto_playlists.clear();
+    model
+        .auto_playlists
+        .extend(snapshot.autoplaylists.iter().map(auto_playlist_item));
+    model.covers.clear();
+    model.covers.extend(
+        covers
+            .iter()
+            .map(|(key, image)| (key.clone(), Arc::clone(image))),
+    );
+}
 
 /// 与 `fb-library` 的专辑分组键保持一致。
 fn album_key(artist: Option<&str>, album_artist: Option<&str>, album: Option<&str>) -> String {
@@ -3792,6 +3829,60 @@ mod tests {
             rg_album_gain: None,
             rg_album_peak: None,
         }
+    }
+
+    #[test]
+    fn rebuild_static_model_drops_tracks_missing_from_shrunk_snapshot() {
+        let covers = HashMap::new();
+        let mut model = UiModel::default();
+        let two = LibrarySnapshot {
+            tracks: vec![
+                record("local:/a.flac", "A", None, None),
+                record("local:/b.flac", "B", None, None),
+            ],
+            albums: Vec::new(),
+            playlists: Vec::new(),
+            autoplaylists: Vec::new(),
+        };
+        rebuild_static_model(&mut model, &two, &covers);
+        assert_eq!(model.tracks.len(), 2);
+
+        let one = LibrarySnapshot {
+            tracks: vec![record("local:/a.flac", "A", None, None)],
+            albums: Vec::new(),
+            playlists: Vec::new(),
+            autoplaylists: Vec::new(),
+        };
+        rebuild_static_model(&mut model, &one, &covers);
+        assert_eq!(model.tracks.len(), 1);
+        assert_eq!(model.tracks[0].id, "local:/a.flac");
+    }
+
+    #[test]
+    fn rebuild_static_model_replaces_covers_wholesale() {
+        let snapshot = LibrarySnapshot {
+            tracks: Vec::new(),
+            albums: Vec::new(),
+            playlists: Vec::new(),
+            autoplaylists: Vec::new(),
+        };
+        let mut model = UiModel::default();
+        let mut old = HashMap::new();
+        old.insert(
+            "old".to_owned(),
+            Arc::new(egui::ColorImage::filled([1, 1], egui::Color32::RED)),
+        );
+        rebuild_static_model(&mut model, &snapshot, &old);
+        assert!(model.covers.contains_key("old"));
+
+        let mut new = HashMap::new();
+        new.insert(
+            "new".to_owned(),
+            Arc::new(egui::ColorImage::filled([1, 1], egui::Color32::BLUE)),
+        );
+        rebuild_static_model(&mut model, &snapshot, &new);
+        assert!(model.covers.contains_key("new"));
+        assert!(!model.covers.contains_key("old"));
     }
 
     #[test]

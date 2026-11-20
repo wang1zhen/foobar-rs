@@ -1,7 +1,7 @@
 # 性能目标与测量
 
 面向 10,000 首 / 约 500–800 张专辑的本地库，目标平台为 Linux；Windows/macOS 只在 CI 编译，未实测。
-下表的“目标”是发布门槛，“现状”是代码审阅结论；**目前没有内置性能计时**，标“未测”的项需要在发布前补测。
+下表的“目标”是发布门槛，“现状”是代码审阅结论。`fb-library` 已带可复跑的后端计时 example（见“本机实测”和“测量方法”），但 UI 帧时间、启动和内存仍无内置计时，标“未测”的项需要在发布前补测。
 
 ## 目标
 
@@ -21,15 +21,48 @@
 
 这些数字是门槛，不是承诺；改动后用同一套素材复测并更新本表。
 
+## 本机实测（2026-11-21）
+
+M6 性能验收，只覆盖 `fb-library` 后端；环境与素材：
+
+- Linux 7.3.4-1-cachyos (x86_64)，AMD Ryzen 5 9600X（6 核 12 线程），16 GiB 内存。
+- rustc/cargo 1.99.0，`--release`（`target/release/examples/bench`）。
+- 合成素材：10,000 个 46 字节 WAV（44 字节 header + 2 个 8 kHz / 8-bit / 单声道样本，data chunk
+  2 字节，满足 RIFF 偶数对齐），分 10 个 `dir-NNNN/` 子目录，文件名 `song-00001.wav`…
+  `song-10000.wav`；无标签、无封面。
+- 页缓存未清，属于热缓存；每项单次计时，tmpfs 行为 4 次运行的范围。
+- 命令：`cargo run --release -p fb-library --example bench -- 10000`（默认 `N = 10000`）。
+  默认落在 `/tmp`（本机为 tmpfs）；把 `TMPDIR` 指向磁盘可看真实文件系统开销。
+
+| 场景 | tmpfs（`/tmp`） | ZFS（`target/`） | 当前目标 | 结论 |
+| --- | --- | --- | --- | --- |
+| 生成 10k 文件 | 18.5–24.4 ms | 94.7 ms | — | — |
+| `scan_dir_with_options` | 20.2–21.2 ms（10,000 曲目，0 错误） | 45.7 ms | 冷扫描 ≤ 90 s | 本素材远低于目标* |
+| `Library::open` | 0.58–0.76 ms | 27.4 ms | — | — |
+| `replace_folder_with_covers` | 13.9–14.6 ms | 38.6 ms | — | — |
+| `snapshot()` | 4.72–4.94 ms（10,000 曲目，1 专辑，0 播放列表） | 5.64 ms | ≤ 100 ms | 达成* |
+| `search("song-05001")` | 0.78–0.83 ms（1 条结果） | 1.35 ms | 每键 p95 ≤ 16 ms（UI，未测） | 后端单次 search < 16 ms；UI 每键 p95 未测 |
+
+\* 合成 WAV 极小且无标签/封面，扫描几乎只测到目录遍历和 `lofty` 最小解析；10000 首共用一个
+“Unknown Album”分组，所以 albums = 1。真实 10k 库（大文件、FLAC/MP3 标签、目录封面、冷缓存）
+的扫描与入库会明显更慢，不能把上表当成真实素材的验收结果。启动、滚动帧时间、搜索输入 p95、
+封面解码停顿、RSS、EQ/远程缓存本机均未测，见“目标”表的“未测”项与“优化项”。
+
+后端在这套素材上没有出现瓶颈：扫描/入库为几十毫秒、snapshot 约 5 ms、SQL 搜索约 1 ms，
+均低于当前门槛。因此本机没有新增待优化项；已知风险仍是 UI 侧的每帧模型重建、客户端搜索和
+同步封面解码，以及真实标签解析与冷缓存下的扫描耗时。
+
 ## 测量方法
 
 1. **统一构建与素材**：`cargo build --release -p fb-app`；用独立的 `FOOBAR_RS_DATA_DIR` 和
    `FOOBAR_RS_CONFIG_DIR`，避免旧库/旧缓存污染。素材建议 10,000 个真实编码文件、500+ 专辑、
    每首带 title/artist/album/track/duration 标签；把素材放在本地 SSD，并记录是否清过页缓存
    （`sync; echo 3 | sudo tee /proc/sys/vm/drop_caches` 为可选冷缓存步骤）。
-2. **扫描/启动**：用 `hyperfine --warmup 1 './target/release/fb-app'` 只能量化启动；扫描耗时目前
-   只能从点击“扫描全部”到状态栏出现结果用秒表/录屏计时，或临时在扫描线程首尾打
-   `Instant::now()` 日志后回退。发布前建议把该计时做成 debug 日志，而不是靠肉眼。
+2. **扫描/启动**：纯后端扫描/入库/snapshot/SQL 搜索用 `cargo run --release -p fb-library --example
+   bench -- 10000` 复测，输出已分别计时生成、`scan_dir_with_options`、`Library::open`、
+   `replace_folder_with_covers`、`snapshot` 和 `search`。UI 端到端扫描耗时仍只能从点击“扫描全部”
+   到状态栏出现结果用秒表/录屏计时；`hyperfine --warmup 1 './target/release/fb-app'` 只能量进程
+   启动开销，GUI 首帧/可交互时间需日志或录屏。
 3. **帧时间**：滚动/输入时用 `perf record -g -p $(pgrep -x fb-app)` 或 `samply record` 采 10 s，
    看主线程热点是否落在 `ui_model`、`visible_tracks`、封面解码或 SQLite；条件允许时临时用
    `ctx.input(|i| i.stable_dt)` 打点，确认 p95 而不是平均值。

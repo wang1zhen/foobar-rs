@@ -345,7 +345,9 @@ impl UiState {
     }
 
     /// 换一份数据（宿主每次状态变化时调用）。选中项会尽量保留，失效则回退。
-    pub fn set_model(&mut self, model: UiModel) {
+    ///
+    /// 返回上一份模型，宿主可复用它避免每帧重新分配。
+    pub fn set_model(&mut self, model: UiModel) -> UiModel {
         if model.remote.selected_album != self.last_remote_album {
             self.remote_back_to_albums = false;
             self.last_remote_album = model.remote.selected_album.clone();
@@ -374,7 +376,7 @@ impl UiState {
         if !playlist_exists {
             self.selected_playlist = None;
         }
-        self.model = model;
+        std::mem::replace(&mut self.model, model)
     }
 
     /// 把模型里的封面按 key 上传成纹理；模型删掉的 key 同时释放。
@@ -5046,4 +5048,18 @@ pub fn grouped(value: usize) -> String {
         out.push(ch);
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn set_model_returns_previous_model() {
+        let ctx = egui::Context::default();
+        let mut state = UiState::new(&ctx, UiModel::demo(), UiPreferences::default());
+        let previous = state.set_model(UiModel::default());
+        assert_eq!(previous.tracks.len(), UiModel::demo().tracks.len());
+        assert!(state.model.tracks.is_empty());
+    }
 }
