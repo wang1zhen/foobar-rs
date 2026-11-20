@@ -5,7 +5,7 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
-# 只上传 artifact；若要 `gh release upload`，改成 contents: write。
+# 默认只读；仅 github-release job 需要 contents: write。
 permissions:
   contents: read
 
@@ -183,7 +183,27 @@ jobs:
       - name: List artifacts
         run: ls -lh dist
 
-      # 可选：创建 GitHub Release 并上传（需要上面 permissions: contents: write）
-      # - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # tag push 才创建 release；workflow_dispatch 只跑上面的 artifact 汇总。
+  # 保持 --draft：不自动发布，人工检查（及签名）后再 publish。
+  github-release:
+    name: github release (draft)
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create draft release and upload artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --draft \
+            --title "foobar-rs ${GITHUB_REF_NAME#v}" \
+            --generate-notes
+          find artifacts -type f -print0 | xargs -0 gh release upload "$GITHUB_REF_NAME" --clobber

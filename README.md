@@ -1,5 +1,8 @@
 # foobar-rs
 
+![CI](https://github.com/wang1zhen/foobar-rs/actions/workflows/ci.yml/badge.svg)
+![Release](https://github.com/wang1zhen/foobar-rs/actions/workflows/release.yml/badge.svg)
+
 foobar2000 风格的跨平台音乐播放器，Rust + egui。当前处于 **M6：功能与插件生态完成，已加入三平台打包、Release workflow、崩溃日志、许可清单与性能/无障碍审计文档**。
 
 ## 定位
@@ -127,8 +130,11 @@ $env:VERSION='0.1.0'; packaging/windows/package.ps1
 里放行。CI：推送 `v*` 标签（或手动 `workflow_dispatch`）触发 `.github/workflows/release.yml`，三平台各自
 构建并上传 tar.gz/deb/AppImage/SHA256SUMS、zip/MSI、zip/dmg；签名 secrets 缺失时自动跳过签名。Windows
 的 WiX 固定 `--version 4.0.5`（v6+ 的 OSMF EULA 会让 `wix build` 报 WIX7015）：装不上 WiX 只少 MSI，
-装上 v4 后 MSI 构建失败则 job 失败。Release job 只汇总 artifact，创建 GitHub Release 的
-`gh release create` 留在注释里（启用时需 `contents: write`）。
+装上 v4 后 MSI 构建失败则 job 失败。
+
+标签构建会额外创建 **draft** GitHub Release，打包产物自动作为 release asset 上传；`workflow_dispatch`
+只汇总 artifact，不创建 release。draft 需要人工检查产物（当前无签名 secrets，包未签名/未公证），必要时
+本地签名后再在 GitHub 上 publish。Release workflow 本身未在远端真实运行验证。
 
 未验证：deb 仅在本机 `ar`/`tar` 校验通过，未用 `dpkg -i` 实装；AppImage 未构造（无 appimagetool）、MSI 未
 构建（无 WiX）、macOS 签名/公证未实机；Release workflow 未在远端真实运行。Linux 包名固定 `x86_64`（deb 架构
