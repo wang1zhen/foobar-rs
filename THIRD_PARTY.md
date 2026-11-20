@@ -2,7 +2,7 @@
 
 本项目以 MIT 许可发布，全文见 [LICENSE](LICENSE)。本文件列出**直接依赖**和**对再分发有特殊义务的传递依赖**；版本取自
 `Cargo.lock`（2026-11-18）。完整清单以 `cargo metadata` 为准，许可策略与例外见 [deny.toml](deny.toml)
-（本机不要求安装 `cargo-deny`）。
+（CI 通过 `cargo-deny-action` 执行 `cargo deny check`）。
 
 > 标有“需发布前核对”的条目表示仓库里还没有完成对应的分发动作，不是已确认合规。
 
@@ -13,7 +13,7 @@
 | egui / eframe / epaint | 0.37.0 | MIT OR Apache-2.0 | 界面与窗口；`eframe` 启用了 `accesskit`、`glow`、`default_fonts` |
 | rodio | 0.23.0 | MIT OR Apache-2.0 | 音频输出；默认特性关闭，只启用 playback/wav/flac/mp3/vorbis/mp4 |
 | reqwest | 0.13.5 | MIT OR Apache-2.0 | 远程库 / 电台 HTTP(S)；启用 rustls，音频侧用 blocking，远程客户端用 query |
-| rusqlite | 0.40.2 | MIT | 媒体库数据库；启用 `bundled`，随包的 SQLite 为公有领域 |
+| rusqlite | 0.41.1 | MIT | 媒体库数据库；启用 `bundled`，随包的 SQLite 3.54.1 为公有领域 |
 | lofty | 0.25.5 | MIT OR Apache-2.0 | 音频标签与时长解析 |
 | blake3 | 1.8.7 | CC0-1.0 OR Apache-2.0 OR Apache-2.0 WITH LLVM-exception | 封面哈希 / 插件完整性；本项目按 Apache-2.0 使用 |
 | souvlaki | 0.9.3 | MIT | Linux MPRIS、Windows SMTC、macOS Now Playing |
@@ -48,6 +48,7 @@
 | r-efi | 5.3.0 / 6.0.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later | 按 MIT/Apache-2.0 使用，不触发 LGPL |
 | clipboard-win / error-code（Windows） | 5.4.3 / 3.4.0 | BSL-1.0 | 宽松许可，保留声明即可 |
 | aws-lc-rs 等 rustls 后端 | 见 Cargo.lock | ISC / Apache-2.0 组合 | 保留许可与版权声明 |
+| webpki-root-certs（rustls-platform-verifier → reqwest） | 1.0.12 | CDLA-Permissive-2.0 | 打包 Mozilla 根证书数据（非代码）；许可允许无限制使用、修改与再分发，保留许可/归属声明即可 |
 
 `cargo metadata` 中 `self_cell` 的 `GPL-2.0-only` 选项、`r-efi` 的 LGPL 选项都是“或”关系，本项目选择宽松分支；
 不要把它们误解为整体 GPL/LGPL。

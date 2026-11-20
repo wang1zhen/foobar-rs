@@ -6,13 +6,13 @@ license.workspace = true
 publish = false
 
 [dependencies]
-fb-ui = { path = "../fb-ui" }
-fb-core = { path = "../fb-core" }
-fb-library = { path = "../fb-library" }
-fb-audio = { path = "../fb-audio" }
-fb-remote = { path = "../fb-remote" }
-fb-ext-api = { path = "../fb-ext-api" }
-fb-ext-host = { path = "../fb-ext-host" }
+fb-ui = { path = "../fb-ui", version = "0.0.0" }
+fb-core = { path = "../fb-core", version = "0.1.0" }
+fb-library = { path = "../fb-library", version = "0.1.0" }
+fb-audio = { path = "../fb-audio", version = "0.1.0" }
+fb-remote = { path = "../fb-remote", version = "0.1.0" }
+fb-ext-api = { path = "../fb-ext-api", version = "0.1.0" }
+fb-ext-host = { path = "../fb-ext-host", version = "0.1.0" }
 wat = "1"
 blake3 = "1"
 rfd = "0.18"

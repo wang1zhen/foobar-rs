@@ -57,6 +57,13 @@ jobs:
       - name: Build
         run: cargo build --workspace
 
+  deny:
+    name: cargo-deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+
   msrv:
     name: msrv (1.97)
     runs-on: ubuntu-latest

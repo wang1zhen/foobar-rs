@@ -164,7 +164,7 @@ $env:VERSION='0.1.0'; packaging/windows/package.ps1
 - **多目录媒体库**：支持每目录递归/globs 排除；重叠或嵌套根目录未做冲突校验，建议配置互不包含的目录。rfd 目录选择器的真实 KDE/GNOME 门户交互未验证。
 - Windows/macOS 实机、中文 IME、Orca/NVDA/VoiceOver、高 DPI 未验证；CI 尚未在远端真实运行。
 - Noto Sans SC 约 10.6 MB 编入二进制；发布包体积敏感时需要子集化或运行时加载。
-- **M6 发布缺口**：三平台 Release workflow 已写但未在远端真实运行；Windows/macOS 未实机；deb 未用 `dpkg -i` 实装，AppImage/MSI 安装包与签名/公证脚本未实跑。`cargo deny check` 未运行。10k 压测与 NVDA/VoiceOver/Orca、中文 IME、高 DPI 仍未实测。
+- **M6 发布缺口**：三平台 Release workflow 已写但未在远端真实运行；Windows/macOS 未实机；deb 未用 `dpkg -i` 实装，AppImage/MSI 安装包与签名/公证脚本未实跑。`cargo deny check` 本机已运行并通过（advisories/bans/licenses/sources），并已在 CI 增加独立 job。10k 真实素材压测与 NVDA/VoiceOver/Orca、中文 IME、高 DPI 仍未实测。
 
 ## 手动验收清单
 
@@ -189,7 +189,7 @@ $env:VERSION='0.1.0'; packaging/windows/package.ps1
 
 ## 发布 / 质量
 
-- [docs/performance.md](docs/performance.md)：10k 库的扫描/搜索/帧时间目标与测量方法、主线程现状与优化项。
+- [docs/performance.md](docs/performance.md)：10k 库的扫描/搜索/帧时间目标与测量方法、本机后端实测（`cargo run --release -p fb-library --example bench -- 10000`）、主线程现状与优化项。
 - [docs/accessibility.md](docs/accessibility.md)：键盘/焦点/读屏/高对比/高 DPI/中文 IME 验收清单与已知缺口。
 - [THIRD_PARTY.md](THIRD_PARTY.md)：第三方依赖、随包字体与特殊许可义务。
 - [LICENSE](LICENSE)：MIT；[deny.toml](deny.toml)：cargo-deny 许可与重复版本策略。
