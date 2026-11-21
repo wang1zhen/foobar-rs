@@ -163,7 +163,7 @@ amd64/arm64）；自动更新未做。
 - **系统媒体键**：Linux 已完成 MPRIS 服务注册与元数据同步；真实媒体键、Windows SMTC、macOS Now Playing 未实机验证；第二个实例同名 MPRIS 未隔离。
 - **布局/列/快捷键**：已提供 4 个预设与尺寸拖动；列宽拖拽、设置项点击、真实鼠标拖动只做了 headless 测试，真实交互未逐项验收。
 - **多目录媒体库**：支持每目录递归/globs 排除；重叠或嵌套根目录未做冲突校验，建议配置互不包含的目录。rfd 目录选择器的真实 KDE/GNOME 门户交互未验证。
-- Windows/macOS 实机、中文 IME、Orca/NVDA/VoiceOver、高 DPI 未验证；CI（格式/测试/Clippy/构建/cargo-deny）已在远端三平台运行并通过，但只覆盖编译与 headless 测试，未在实机运行产物。
+- Windows/macOS 实机、中文 IME、Orca/NVDA/VoiceOver、高 DPI 未验证；CI 已在远端跑通：Linux/macOS/Windows + MSRV 执行格式/测试/Clippy/构建，另有独立的 Linux `cargo-deny` job。CI 只覆盖编译与 headless 测试，未在实机运行产物。
 - Noto Sans SC 约 10.6 MB 编入二进制；发布包体积敏感时需要子集化或运行时加载。
 - **M6 发布缺口**：三平台 Release workflow 已用 `workflow_dispatch` 实跑并通过（tar.gz/deb/AppImage、zip/MSI、zip/dmg 均产出），tag 触发的 draft Release 创建流程未实跑；Windows/macOS 未实机；deb 未用 `dpkg -i` 实装。`cargo deny check` 本机与 CI 均通过。10k 真实素材压测与 NVDA/VoiceOver/Orca、中文 IME、高 DPI 仍未实测。
 
