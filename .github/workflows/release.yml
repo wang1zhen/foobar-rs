@@ -183,7 +183,8 @@ jobs:
       - name: List artifacts
         run: ls -lh dist
 
-  # tag push 才创建 release；workflow_dispatch 只跑上面的 artifact 汇总。
+  # 只为 v* tag ref 创建 release：tag push 与手动 dispatch 到 v* tag ref 都会创建；
+  # dispatch 到普通分支只跑上面的 artifact 汇总。
   # 保持 --draft：不自动发布，人工检查（及签名）后再 publish。
   github-release:
     name: github release (draft)
@@ -201,16 +202,20 @@ jobs:
       - name: Create draft release and upload artifacts
         env:
           GH_TOKEN: ${{ github.token }}
+        # bash 默认 shell 不带 pipefail，checksum 管道失败会静默产出空清单。
+        shell: bash
         run: |
           # Linux 脚本的 SHA256SUMS 只覆盖 Linux 包；在汇总目录重算一份覆盖全部产物的。
           ( cd artifacts && sha256sum -- * \
               | grep -v ' SHA256SUMS$' \
               | LC_ALL=C sort -k2 > .sums && mv .sums SHA256SUMS )
           # 本 job 无 checkout，显式 -R 指定仓库（gh 无法从 cwd 推断）。
+          # 非幂等：同 tag 已有 release 时 create 会失败，重发请用新版本号；
+          # --clobber 只替换同名 asset，不删除 release 上的旧 asset。
           gh release create "$GITHUB_REF_NAME" \
             -R "$GITHUB_REPOSITORY" \
             --draft \
             --title "foobar-rs ${GITHUB_REF_NAME#v}" \
             --generate-notes
           find artifacts -type f -print0 \
-            | xargs -0 gh release upload "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --clobber
+            | xargs -0 -r gh release upload "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --clobber

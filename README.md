@@ -133,11 +133,13 @@ $env:VERSION='0.1.0'; packaging/windows/package.ps1
 装上 v4 后 MSI 构建失败则 job 失败。
 
 标签构建会额外创建 **draft** GitHub Release，打包产物自动作为 release asset 上传；`workflow_dispatch`
-只汇总 artifact，不创建 release。draft 需要人工检查产物（当前无签名 secrets，包未签名/未公证），必要时
+选 `v*` tag ref 时与 tag push 一样创建 draft，dispatch 到普通分支才只汇总 artifact、不创建 release。
+draft 需要人工检查产物（当前无签名 secrets，包未签名/未公证），必要时
 本地签名后再在 GitHub 上 publish（该 job 用 `-R "$GITHUB_REPOSITORY"` 指定仓库，不依赖 checkout）。
 `workflow_dispatch` 下三平台打包、tag 触发的 draft Release 创建都已在远端实跑通过；
 最近一次 tag `v0.1.1` 生成了 draft release，含三平台全部产物与 `SHA256SUMS`（未签名/未公证）；`SHA256SUMS`
-在 artifact 汇总后重算，覆盖三平台全部产物而非只覆盖 Linux 包。
+在 artifact 汇总后重算，覆盖三平台全部产物而非只覆盖 Linux 包。`v0.1.0` 是开发早期的历史 tag（指向
+`5dec495`，无对应 release），不要当作已发布版本；当前发布候选是 `v0.1.1` 的 draft。
 
 未验证：deb 仅在本机 `ar`/`tar` 校验通过，未用 `dpkg -i` 实装；AppImage、MSI 已在 CI 实际构建，但未在
 对应系统上安装/运行；macOS 签名/公证未实机。Linux 包名固定 `x86_64`（deb 架构按构建机映射
