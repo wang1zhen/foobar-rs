@@ -134,16 +134,17 @@ $env:VERSION='0.1.0'; packaging/windows/package.ps1
 
 标签构建会额外创建 **draft** GitHub Release，打包产物自动作为 release asset 上传；`workflow_dispatch`
 只汇总 artifact，不创建 release。draft 需要人工检查产物（当前无签名 secrets，包未签名/未公证），必要时
-本地签名后再在 GitHub 上 publish。Release workflow 本身未在远端真实运行验证。
+本地签名后再在 GitHub 上 publish。`workflow_dispatch` 下三平台打包已在远端实跑通过；tag 触发的 draft
+Release 创建流程尚未实跑。
 
-未验证：deb 仅在本机 `ar`/`tar` 校验通过，未用 `dpkg -i` 实装；AppImage 未构造（无 appimagetool）、MSI 未
-构建（无 WiX）、macOS 签名/公证未实机；Release workflow 未在远端真实运行。Linux 包名固定 `x86_64`（deb 架构
-按构建机映射 amd64/arm64）；自动更新未做。
+未验证：deb 仅在本机 `ar`/`tar` 校验通过，未用 `dpkg -i` 实装；AppImage、MSI 已在 CI 实际构建，但未在
+对应系统上安装/运行；macOS 签名/公证未实机。Linux 包名固定 `x86_64`（deb 架构按构建机映射
+amd64/arm64）；自动更新未做。
 
 ## 已知限制 / 待办
 
 - **真实封面未接入**：专辑/曲目仍用生成式占位，未读取嵌入图片或 `cover.jpg`/`folder.jpg`。登记为 M1b，不阻塞 M1。
-- **未做 10k 真实压测**：只验证了 UI 虚拟化的绘制上限；扫描耗时、全表 snapshot 的帧耗、客户端搜索仍可能在大库下卡顿。
+- **未做 10k 真实素材压测**：`fb-library` 后端合成素材基准见 [docs/performance.md](docs/performance.md)；真实标签/封面、启动、滚动帧时间与客户端搜索仍未实测。
 - **部分操作仍在 UI 线程读库**：创建/加入播放列表、选择播放列表、重载 snapshot 是同步 SQLite 查询；10k 规模可用，但属于架构债。
 - **音量设置每次动作写盘**：UI 当前主要在松手时发动作；若后续改为连续事件，需要加防抖。
 - **无音频设备时**已避免进入“正在播放”，但真实设备断开、蓝牙切换、切歌/seek/暂停恢复尚未端到端验证。
@@ -162,9 +163,9 @@ $env:VERSION='0.1.0'; packaging/windows/package.ps1
 - **系统媒体键**：Linux 已完成 MPRIS 服务注册与元数据同步；真实媒体键、Windows SMTC、macOS Now Playing 未实机验证；第二个实例同名 MPRIS 未隔离。
 - **布局/列/快捷键**：已提供 4 个预设与尺寸拖动；列宽拖拽、设置项点击、真实鼠标拖动只做了 headless 测试，真实交互未逐项验收。
 - **多目录媒体库**：支持每目录递归/globs 排除；重叠或嵌套根目录未做冲突校验，建议配置互不包含的目录。rfd 目录选择器的真实 KDE/GNOME 门户交互未验证。
-- Windows/macOS 实机、中文 IME、Orca/NVDA/VoiceOver、高 DPI 未验证；CI 尚未在远端真实运行。
+- Windows/macOS 实机、中文 IME、Orca/NVDA/VoiceOver、高 DPI 未验证；CI（格式/测试/Clippy/构建/cargo-deny）已在远端三平台运行并通过，但只覆盖编译与 headless 测试，未在实机运行产物。
 - Noto Sans SC 约 10.6 MB 编入二进制；发布包体积敏感时需要子集化或运行时加载。
-- **M6 发布缺口**：三平台 Release workflow 已写但未在远端真实运行；Windows/macOS 未实机；deb 未用 `dpkg -i` 实装，AppImage/MSI 安装包与签名/公证脚本未实跑。`cargo deny check` 本机已运行并通过（advisories/bans/licenses/sources），并已在 CI 增加独立 job。10k 真实素材压测与 NVDA/VoiceOver/Orca、中文 IME、高 DPI 仍未实测。
+- **M6 发布缺口**：三平台 Release workflow 已用 `workflow_dispatch` 实跑并通过（tar.gz/deb/AppImage、zip/MSI、zip/dmg 均产出），tag 触发的 draft Release 创建流程未实跑；Windows/macOS 未实机；deb 未用 `dpkg -i` 实装。`cargo deny check` 本机与 CI 均通过。10k 真实素材压测与 NVDA/VoiceOver/Orca、中文 IME、高 DPI 仍未实测。
 
 ## 手动验收清单
 

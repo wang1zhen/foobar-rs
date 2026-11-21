@@ -379,6 +379,11 @@ impl UiState {
         std::mem::replace(&mut self.model, model)
     }
 
+    /// 当前 UI 内部使用的模型，供测试或宿主只读查询；不暴露可变引用。
+    pub fn model(&self) -> &UiModel {
+        &self.model
+    }
+
     /// 把模型里的封面按 key 上传成纹理；模型删掉的 key 同时释放。
     ///
     /// shortcut: key 视为内容哈希，同 key 的图片不会重复上传；宿主换图必须换 key。

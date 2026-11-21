@@ -87,6 +87,8 @@ struct App {
     model: UiModel,
     /// `model` 静态部分对应的 snapshot 版本。
     model_generation: u64,
+    /// `state` 内部那份模型对应的 snapshot 版本。
+    state_model_generation: u64,
     /// snapshot/covers 每变化一次递增。
     snapshot_generation: u64,
     playback: PlaybackState,
@@ -206,6 +208,7 @@ impl App {
             cover_cache: HashMap::new(),
             model: UiModel::default(),
             model_generation: 0,
+            state_model_generation: 0,
             snapshot_generation: 1,
             playback,
             audio,
@@ -319,10 +322,13 @@ impl App {
         self.model.library_path = primary_library_path(&self.settings.folders);
         self.model.scanning = self.scan_rx.is_some();
         self.model.status = self.status.clone();
-        // 换回的旧模型带着上一帧的静态数据，下帧靠 generation 判断是否重建。
-        let sent = std::mem::replace(&mut self.model_generation, self.snapshot_generation);
-        self.model = self.state.set_model(std::mem::take(&mut self.model));
-        self.model_generation = sent;
+        // 换回的模型与 UiState 里那份的 generation 一起记录，下帧靠它判断是否重建。
+        exchange_model(
+            &mut self.state,
+            &mut self.model,
+            &mut self.model_generation,
+            &mut self.state_model_generation,
+        );
     }
 
     fn sources(&self) -> Vec<SourceItem> {
@@ -2429,6 +2435,17 @@ impl eframe::App for App {
 
 // ---- 纯函数：媒体库/播放状态 → 界面模型 ----
 
+/// 把自己的模型送进 UI，并收回 UI 里原有的模型；两份 generation 一起交换。
+fn exchange_model(
+    state: &mut UiState,
+    model: &mut UiModel,
+    model_generation: &mut u64,
+    state_model_generation: &mut u64,
+) {
+    *model = state.set_model(std::mem::take(model));
+    std::mem::swap(model_generation, state_model_generation);
+}
+
 /// 用 snapshot/covers 重建模型的静态部分，保留已有 Vec 容量避免每帧重新分配。
 fn rebuild_static_model(
     model: &mut UiModel,
@@ -3883,6 +3900,150 @@ mod tests {
         rebuild_static_model(&mut model, &snapshot, &new);
         assert!(model.covers.contains_key("new"));
         assert!(!model.covers.contains_key("old"));
+    }
+
+    #[test]
+    fn exchange_model_keeps_library_across_frames() {
+        let ctx = egui::Context::default();
+        let mut state = UiState::new(&ctx, UiModel::default(), fb_ui::UiPreferences::default());
+        let covers = HashMap::new();
+        let snapshot = LibrarySnapshot {
+            tracks: vec![record("local:/a.flac", "A", None, None)],
+            albums: Vec::new(),
+            playlists: Vec::new(),
+            autoplaylists: Vec::new(),
+        };
+        let mut model = UiModel::default();
+        let mut model_generation = 0;
+        let mut state_model_generation = 0;
+        let snapshot_generation = 1;
+        for _ in 0..4 {
+            if model_generation != snapshot_generation {
+                rebuild_static_model(&mut model, &snapshot, &covers);
+                model_generation = snapshot_generation;
+            }
+            assert_eq!(model.tracks.len(), 1);
+            exchange_model(
+                &mut state,
+                &mut model,
+                &mut model_generation,
+                &mut state_model_generation,
+            );
+            assert_eq!(state.model().tracks.len(), 1);
+        }
+    }
+
+    #[test]
+    fn exchange_model_does_not_resurrect_removed_tracks() {
+        let ctx = egui::Context::default();
+        let mut state = UiState::new(&ctx, UiModel::default(), fb_ui::UiPreferences::default());
+        let covers = HashMap::new();
+        let two = LibrarySnapshot {
+            tracks: vec![
+                record("local:/a.flac", "A", None, None),
+                record("local:/b.flac", "B", None, None),
+            ],
+            albums: Vec::new(),
+            playlists: Vec::new(),
+            autoplaylists: Vec::new(),
+        };
+        let one = LibrarySnapshot {
+            tracks: vec![record("local:/a.flac", "A", None, None)],
+            albums: Vec::new(),
+            playlists: Vec::new(),
+            autoplaylists: Vec::new(),
+        };
+        let mut model = UiModel::default();
+        let mut model_generation = 0;
+        let mut state_model_generation = 0;
+        let mut snapshot_generation = 1;
+        for _ in 0..2 {
+            if model_generation != snapshot_generation {
+                rebuild_static_model(&mut model, &two, &covers);
+                model_generation = snapshot_generation;
+            }
+            exchange_model(
+                &mut state,
+                &mut model,
+                &mut model_generation,
+                &mut state_model_generation,
+            );
+        }
+        assert_eq!(state.model().tracks.len(), 2);
+
+        snapshot_generation += 1;
+        for _ in 0..4 {
+            if model_generation != snapshot_generation {
+                rebuild_static_model(&mut model, &one, &covers);
+                model_generation = snapshot_generation;
+            }
+            exchange_model(
+                &mut state,
+                &mut model,
+                &mut model_generation,
+                &mut state_model_generation,
+            );
+            let tracks = &state.model().tracks;
+            assert_eq!(tracks.len(), 1);
+            assert!(tracks.iter().all(|track| track.id != "local:/b.flac"));
+        }
+    }
+
+    #[test]
+    fn exchange_model_does_not_resurrect_old_covers() {
+        let ctx = egui::Context::default();
+        let mut state = UiState::new(&ctx, UiModel::default(), fb_ui::UiPreferences::default());
+        let snapshot = LibrarySnapshot {
+            tracks: Vec::new(),
+            albums: Vec::new(),
+            playlists: Vec::new(),
+            autoplaylists: Vec::new(),
+        };
+        let mut old = HashMap::new();
+        old.insert(
+            "old".to_owned(),
+            Arc::new(egui::ColorImage::filled([1, 1], egui::Color32::RED)),
+        );
+        let mut new = HashMap::new();
+        new.insert(
+            "new".to_owned(),
+            Arc::new(egui::ColorImage::filled([1, 1], egui::Color32::BLUE)),
+        );
+        let mut model = UiModel::default();
+        let mut model_generation = 0;
+        let mut state_model_generation = 0;
+        let mut snapshot_generation = 1;
+        for _ in 0..2 {
+            if model_generation != snapshot_generation {
+                rebuild_static_model(&mut model, &snapshot, &old);
+                model_generation = snapshot_generation;
+            }
+            exchange_model(
+                &mut state,
+                &mut model,
+                &mut model_generation,
+                &mut state_model_generation,
+            );
+        }
+        assert!(state.model().covers.contains_key("old"));
+
+        snapshot_generation += 1;
+        for _ in 0..4 {
+            if model_generation != snapshot_generation {
+                rebuild_static_model(&mut model, &snapshot, &new);
+                model_generation = snapshot_generation;
+            }
+            exchange_model(
+                &mut state,
+                &mut model,
+                &mut model_generation,
+                &mut state_model_generation,
+            );
+            let covers = &state.model().covers;
+            assert_eq!(covers.len(), 1);
+            assert!(covers.contains_key("new"));
+            assert!(!covers.contains_key("old"));
+        }
     }
 
     #[test]

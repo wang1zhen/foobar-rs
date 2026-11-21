@@ -1,7 +1,7 @@
 # 第三方组件与许可
 
 本项目以 MIT 许可发布，全文见 [LICENSE](LICENSE)。本文件列出**直接依赖**和**对再分发有特殊义务的传递依赖**；版本取自
-`Cargo.lock`（2026-11-18）。完整清单以 `cargo metadata` 为准，许可策略与例外见 [deny.toml](deny.toml)
+`Cargo.lock`（2026-11-21）。完整清单以 `cargo metadata` 为准，许可策略与例外见 [deny.toml](deny.toml)
 （CI 通过 `cargo-deny-action` 执行 `cargo deny check`）。
 
 > 标有“需发布前核对”的条目表示仓库里还没有完成对应的分发动作，不是已确认合规。
