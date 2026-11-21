@@ -135,8 +135,8 @@ $env:VERSION='0.1.0'; packaging/windows/package.ps1
 标签构建会额外创建 **draft** GitHub Release，打包产物自动作为 release asset 上传；`workflow_dispatch`
 只汇总 artifact，不创建 release。draft 需要人工检查产物（当前无签名 secrets，包未签名/未公证），必要时
 本地签名后再在 GitHub 上 publish（该 job 用 `-R "$GITHUB_REPOSITORY"` 指定仓库，不依赖 checkout）。
-`workflow_dispatch` 下三平台打包已在远端实跑通过；tag 触发的 draft
-Release 创建流程尚未实跑。
+`workflow_dispatch` 下三平台打包、tag 触发的 draft Release 创建都已在远端实跑通过；
+最近一次 tag `v0.1.1` 生成了 draft release，含三平台全部产物与 `SHA256SUMS`（未签名/未公证）。
 
 未验证：deb 仅在本机 `ar`/`tar` 校验通过，未用 `dpkg -i` 实装；AppImage、MSI 已在 CI 实际构建，但未在
 对应系统上安装/运行；macOS 签名/公证未实机。Linux 包名固定 `x86_64`（deb 架构按构建机映射
@@ -166,7 +166,7 @@ amd64/arm64）；自动更新未做。
 - **多目录媒体库**：支持每目录递归/globs 排除；重叠或嵌套根目录未做冲突校验，建议配置互不包含的目录。rfd 目录选择器的真实 KDE/GNOME 门户交互未验证。
 - Windows/macOS 实机、中文 IME、Orca/NVDA/VoiceOver、高 DPI 未验证；CI 已在远端跑通：Linux/macOS/Windows + MSRV 执行格式/测试/Clippy/构建，另有独立的 Linux `cargo-deny` job。CI 只覆盖编译与 headless 测试，未在实机运行产物。
 - Noto Sans SC 约 10.6 MB 编入二进制；发布包体积敏感时需要子集化或运行时加载。
-- **M6 发布缺口**：三平台 Release workflow 已用 `workflow_dispatch` 实跑并通过（tar.gz/deb/AppImage、zip/MSI、zip/dmg 均产出），tag 触发的 draft Release 创建流程未实跑；Windows/macOS 未实机；deb 未用 `dpkg -i` 实装。`cargo deny check` 本机与 CI 均通过。10k 真实素材压测与 NVDA/VoiceOver/Orca、中文 IME、高 DPI 仍未实测。
+- **M6 发布缺口**：三平台 Release workflow 已用 `workflow_dispatch` 实跑并通过（tar.gz/deb/AppImage、zip/MSI、zip/dmg 均产出），tag 触发的 draft Release 已实跑（`v0.1.1` draft 含全部产物）；Windows/macOS 未实机；deb 未用 `dpkg -i` 实装。`cargo deny check` 本机与 CI 均通过。10k 真实素材压测与 NVDA/VoiceOver/Orca、中文 IME、高 DPI 仍未实测。
 
 ## 手动验收清单
 
