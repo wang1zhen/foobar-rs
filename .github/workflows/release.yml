@@ -202,6 +202,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Linux 脚本的 SHA256SUMS 只覆盖 Linux 包；在汇总目录重算一份覆盖全部产物的。
+          ( cd artifacts && sha256sum -- * \
+              | grep -v ' SHA256SUMS$' \
+              | LC_ALL=C sort -k2 > .sums && mv .sums SHA256SUMS )
           # 本 job 无 checkout，显式 -R 指定仓库（gh 无法从 cwd 推断）。
           gh release create "$GITHUB_REF_NAME" \
             -R "$GITHUB_REPOSITORY" \
