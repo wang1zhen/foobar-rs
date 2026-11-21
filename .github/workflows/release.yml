@@ -202,8 +202,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # 本 job 无 checkout，显式 -R 指定仓库（gh 无法从 cwd 推断）。
           gh release create "$GITHUB_REF_NAME" \
+            -R "$GITHUB_REPOSITORY" \
             --draft \
             --title "foobar-rs ${GITHUB_REF_NAME#v}" \
             --generate-notes
-          find artifacts -type f -print0 | xargs -0 gh release upload "$GITHUB_REF_NAME" --clobber
+          find artifacts -type f -print0 \
+            | xargs -0 gh release upload "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --clobber

@@ -134,7 +134,8 @@ $env:VERSION='0.1.0'; packaging/windows/package.ps1
 
 标签构建会额外创建 **draft** GitHub Release，打包产物自动作为 release asset 上传；`workflow_dispatch`
 只汇总 artifact，不创建 release。draft 需要人工检查产物（当前无签名 secrets，包未签名/未公证），必要时
-本地签名后再在 GitHub 上 publish。`workflow_dispatch` 下三平台打包已在远端实跑通过；tag 触发的 draft
+本地签名后再在 GitHub 上 publish（该 job 用 `-R "$GITHUB_REPOSITORY"` 指定仓库，不依赖 checkout）。
+`workflow_dispatch` 下三平台打包已在远端实跑通过；tag 触发的 draft
 Release 创建流程尚未实跑。
 
 未验证：deb 仅在本机 `ar`/`tar` 校验通过，未用 `dpkg -i` 实装；AppImage、MSI 已在 CI 实际构建，但未在
